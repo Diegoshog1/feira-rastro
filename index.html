@@ -37,7 +37,7 @@ h2{font-family:var(--display);font-weight:400;font-size:clamp(34px,5vw,56px);lin
 .chip{font-family:var(--cond);font-size:17px;letter-spacing:1px;text-transform:uppercase;padding:7px 14px;border:3px solid var(--escuro);box-shadow:3px 3px 0 var(--escuro);line-height:1;display:inline-block}
 .chips{display:flex;flex-wrap:wrap;gap:10px}
 /* hero */
-.hero{background:var(--rosa);color:var(--escuro);overflow:hidden}
+.hero{background:var(--rosa) url(img/chama-suave.png) no-repeat right max(0px,calc(50% - 600px)) bottom -40px/min(720px,100%) auto;color:var(--escuro);overflow:hidden}
 .hero .in{display:grid;grid-template-columns:1.05fr 1fr;gap:32px;align-items:center}
 .hero img.logo{width:100%;max-width:560px;height:auto;display:block;filter:drop-shadow(0 0 0 transparent)}
 .hero .dog{position:relative}
@@ -85,7 +85,7 @@ h2{font-family:var(--display);font-weight:400;font-size:clamp(34px,5vw,56px);lin
 .apoio{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .apoio .k{font-family:var(--cond);letter-spacing:3px;text-transform:uppercase;font-size:14px}
 .apoio .slot{width:110px;height:56px;border:3px dashed rgba(65,61,53,.5);border-radius:4px}
-@media (max-width:760px){.hero .in,.local .in{grid-template-columns:1fr}.hero .dog{order:-1;max-width:420px;margin:0 auto}.hero img.logo{margin:0 auto}.hero .txt{text-align:center}.when,.ctas{justify-content:center}}
+@media (max-width:760px){.hero{background-position:center bottom -30px;background-size:130% auto}.hero .in,.local .in{grid-template-columns:1fr}.hero .dog{order:-1;max-width:420px;margin:0 auto}.hero img.logo{margin:0 auto}.hero .txt{text-align:center}.when,.ctas{justify-content:center}}
 @media (prefers-reduced-motion:reduce){.btn{transition:none}}
 
 /* modal */
@@ -205,7 +205,7 @@ body.lock{overflow:hidden}
 <div class="when"><span>sábado · 15h às 22h</span><span class="tag">entrada gratuita</span><span class="falta" id="falta" hidden></span></div>
 <div class="ctas"><a class="btn" href="#flashday">flash day</a><a class="btn alt" href="#expositores">quem expõe</a><a class="btn alt" href="https://www.google.com/maps/search/?api=1&query=R.+Padre+Anchieta,+210,+Ramos,+Vi%C3%A7osa+-+MG" target="_blank" rel="noopener">como chegar</a></div>
 </div>
-<div class="dog"><img class="chama" src="img/chama.png" alt="" aria-hidden="true"><img src="img/dog.png" alt="Cachorro da Feira Rastro" width="1100" height="964"></div>
+<div class="dog"><img src="img/dog.png" alt="Cachorro da Feira Rastro" width="1100" height="964"></div>
 </div>
 </section>
 <div class="stars" aria-hidden="true"></div>
