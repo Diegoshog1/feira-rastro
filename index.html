@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Feira Rastro · 07.11.2026 · Casa Flamma, Viçosa/MG. Arte impressa, flash day, oficinas, pintura ao vivo, feira de discos. Entrada gratuita.">
+<meta property="og:title" content="Feira Rastro · 07.11.2026">
+<meta property="og:description" content="25+ artistas na Casa Flamma, Viçosa/MG. Sábado, das 15h às 22h. Entrada gratuita.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://feirarastro.art/og.jpg">
+<meta name="theme-color" content="#E6305D">
+<link rel="icon" href="img/casaflamma.png">
+<link rel="apple-touch-icon" href="img/casaflamma.png">
+<style>img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Feira Rastro</title>
+<style>
+/* layout: lambe-lambe na parede — bandas cheias de cor, moldura de estrelas, serigrafia de 2 cores com sombra deslocada */
+@font-face{font-family:'Alfa';src:url(fonts/alfa.woff2) format('woff2');font-display:swap}
+@font-face{font-family:'BarlowC';src:url(fonts/barlow.woff2) format('woff2');font-weight:700;font-display:swap}
+@font-face{font-family:'Fredoka';src:url(fonts/fredoka.woff2) format('woff2');font-weight:600;font-display:swap}
+@font-face{font-family:'Mao';src:url(fonts/mao.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Pincel';src:url(fonts/pincel.ttf) format('truetype');font-display:swap}
+:root{--rosa:#E6305D;--amarelo:#F4D21C;--escuro:#413D35;--creme:#FFF6D6;--creme2:#F3E7C6;--bg:#413D35;--fg:#FFF6D6;
+--display:'Alfa',Georgia,serif;--cond:'BarlowC','Arial Narrow',sans-serif;--body:'Fredoka','Trebuchet MS',sans-serif;--mao:'Mao','Fredoka',sans-serif;--pincel:'Pincel','Alfa',serif;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-weight:600;line-height:1.45;overflow-x:hidden}
+a{color:inherit}
+.band{position:relative;padding-block:clamp(40px,7vw,96px)}
+.in{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.stars{height:34px;background:url(img/estrelas.png) center/auto 100% repeat-x;background-color:var(--escuro)}
+h2{font-family:var(--display);font-weight:400;font-size:clamp(34px,5vw,56px);line-height:1;margin:0 0 .5em;text-wrap:balance;letter-spacing:1px}
+.eyebrow{font-family:var(--cond);font-size:16px;letter-spacing:3px;text-transform:uppercase;opacity:.85}
+.chip{font-family:var(--cond);font-size:17px;letter-spacing:1px;text-transform:uppercase;padding:7px 14px;border:3px solid var(--escuro);box-shadow:3px 3px 0 var(--escuro);line-height:1;display:inline-block}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+/* hero */
+.hero{background:var(--rosa);color:var(--escuro);overflow:hidden}
+.hero .in{display:grid;grid-template-columns:1.05fr 1fr;gap:32px;align-items:center}
+.hero img.logo{width:100%;max-width:560px;height:auto;display:block;filter:drop-shadow(0 0 0 transparent)}
+.hero .dog{position:relative}
+.hero .dog img{width:100%;height:auto;display:block;transform:rotate(-3deg);filter:drop-shadow(10px 9px 0 var(--escuro))}
+.hero .chama{position:absolute;left:50%;bottom:-8%;width:140%;transform:translateX(-50%);opacity:.9;pointer-events:none}
+.date{font-family:var(--cond);font-size:clamp(64px,10vw,116px);line-height:.95;letter-spacing:2px;color:var(--escuro);text-shadow:5px 5px 0 var(--amarelo);margin:14px 0 6px}
+.when{font-family:var(--cond);font-size:clamp(20px,2.6vw,28px);letter-spacing:2px;text-transform:uppercase;display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center;margin-bottom:22px}
+.when .tag{background:var(--escuro);color:var(--amarelo);padding:6px 14px;box-shadow:3px 3px 0 var(--amarelo)}
+.ctas{display:flex;flex-wrap:wrap;gap:12px}
+.btn{font-family:var(--cond);font-size:20px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:14px 22px;border:3px solid var(--escuro);box-shadow:5px 5px 0 var(--escuro);background:var(--amarelo);color:var(--escuro);transition:transform .12s,box-shadow .12s}
+.btn.alt{background:var(--creme)}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:7px 7px 0 var(--escuro)}
+.btn:focus-visible,.ci:focus-visible{outline:3px solid var(--amarelo);outline-offset:3px}
+.sub{font-family:var(--mao);font-size:clamp(22px,3vw,30px);color:var(--creme);margin:0 0 10px}
+/* programação */
+.prog{background:var(--amarelo);color:var(--escuro)}
+.prog .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin-top:28px}
+.item{background:var(--creme);border:3px solid var(--escuro);box-shadow:6px 6px 0 var(--escuro);padding:22px 22px 24px;transform:rotate(var(--r,0deg))}
+.item h3{font-family:var(--pincel);font-weight:400;font-size:34px;margin:0 0 8px;color:var(--rosa);text-shadow:.05em .05em 0 var(--amarelo);line-height:1}
+.item p{margin:0;font-size:17px;line-height:1.4}
+/* expositores */
+.expo{background:var(--escuro);color:var(--creme)}
+.expo h2{color:var(--amarelo);text-shadow:-4px 4px 0 var(--rosa)}
+.cards{list-style:none;padding:0;margin:28px 0 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:18px 14px}
+.card{background:var(--creme);color:var(--escuro);padding:10px 10px 12px;box-shadow:0 6px 14px rgba(20,18,15,.6);transform:rotate(var(--r,0deg));min-width:0}
+.card img{width:100%;height:auto;aspect-ratio:1;object-fit:cover;display:block;filter:sepia(.25) contrast(1.05)}
+.cn{font-family:var(--pincel);font-size:20px;color:var(--rosa);text-shadow:.05em .05em 0 var(--amarelo);margin-top:10px;line-height:1.05}
+.cc{font-family:var(--cond);font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-top:4px}
+.ci{font-family:var(--cond);font-size:14px;letter-spacing:.5px;display:block;margin-top:4px;text-decoration:none;color:var(--escuro);word-break:break-all}
+.ci:hover{color:var(--rosa)}
+.muted{opacity:.5}
+/* local */
+.local{background:var(--creme);color:var(--escuro)}
+.local .in{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start}
+.addr{font-family:var(--cond);font-size:clamp(24px,3vw,34px);letter-spacing:1px;text-transform:uppercase;line-height:1.15}
+.addr b{font-family:var(--display);font-weight:400;display:block;font-size:clamp(30px,4vw,44px);color:var(--rosa);text-shadow:3px 3px 0 var(--amarelo);margin-bottom:6px}
+.ticket{background:var(--escuro);color:var(--creme);padding:26px 28px;border:4px dashed var(--amarelo);transform:rotate(1.5deg)}
+.ticket .k{font-family:var(--cond);font-size:14px;letter-spacing:3px;text-transform:uppercase;color:var(--amarelo)}
+.ticket .v{font-family:var(--mao);font-size:26px;line-height:1.2;margin:2px 0 14px}
+/* rodapé */
+.foot{background:var(--rosa);color:var(--escuro);padding-block:40px}
+.foot .in{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:20px}
+.foot .cf{display:flex;align-items:center;gap:14px;font-family:var(--cond);letter-spacing:1.5px;text-transform:uppercase;line-height:1.2}
+.foot .cf img{width:56px;height:56px}
+.apoio{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.apoio .k{font-family:var(--cond);letter-spacing:3px;text-transform:uppercase;font-size:14px}
+.apoio .slot{width:110px;height:56px;border:3px dashed rgba(65,61,53,.5);border-radius:4px}
+@media (max-width:760px){.hero .in,.local .in{grid-template-columns:1fr}.hero .dog{order:-1;max-width:420px;margin:0 auto}.hero img.logo{margin:0 auto}.hero .txt{text-align:center}.when,.ctas{justify-content:center}}
+@media (prefers-reduced-motion:reduce){.btn{transition:none}}
+
+/* modal */
+.card button.open{all:unset;display:block;cursor:pointer;width:100%}
+.card button.open:focus-visible{outline:3px solid var(--amarelo);outline-offset:4px}
+.card button.open img{transition:transform .15s}
+.card:hover button.open img{transform:scale(1.03)}
+.card .cn,.card .cc{display:block}
+.modal{position:fixed;inset:0;z-index:50;background:rgba(32,29,24,.82);display:flex;align-items:center;justify-content:center;padding:max(12px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(12px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+.modal[hidden]{display:none}
+.sheet{background:var(--creme);color:var(--escuro);width:min(960px,100%);max-height:100%;overflow:auto;position:relative;display:grid;grid-template-columns:1.15fr 1fr;box-shadow:0 20px 50px rgba(0,0,0,.6)}
+.sheet .pic{background:var(--escuro);position:relative;min-width:0}
+.track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;aspect-ratio:1;max-width:100%}
+.track::-webkit-scrollbar{display:none}
+.track img{flex:0 0 100%;width:100%;height:100%;object-fit:contain;scroll-snap-align:center;display:block}
+.nav{position:absolute;top:50%;transform:translateY(-50%);background:var(--amarelo);color:var(--escuro);border:3px solid var(--escuro);box-shadow:3px 3px 0 var(--escuro);width:44px;height:44px;font-family:var(--cond);font-size:26px;line-height:1;cursor:pointer;display:grid;place-items:center}
+.nav.prev{left:10px}.nav.next{right:10px}
+.nav:focus-visible,.close:focus-visible{outline:3px solid var(--rosa);outline-offset:3px}
+.dots{position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:7px}
+.dots i{width:10px;height:10px;border-radius:50%;background:var(--creme);opacity:.45}
+.dots i.on{opacity:1;background:var(--amarelo)}
+.info{padding:28px 28px 30px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.info h3{font-family:var(--pincel);font-weight:400;font-size:40px;line-height:1;margin:0;color:var(--rosa);text-shadow:.05em .05em 0 var(--amarelo)}
+.info .cat{font-family:var(--cond);letter-spacing:2px;text-transform:uppercase;font-size:14px}
+.info p{margin:0;font-size:16px;line-height:1.5}
+.info .k{font-family:var(--cond);letter-spacing:3px;text-transform:uppercase;font-size:13px;margin-top:6px}
+.info .f{font-family:var(--mao);font-size:22px;color:var(--rosa);line-height:1.2}
+.info .btn{align-self:flex-start;font-size:17px;padding:10px 16px;margin-top:auto}
+.close{position:absolute;top:10px;right:10px;z-index:2;background:var(--rosa);color:var(--creme);border:3px solid var(--escuro);box-shadow:3px 3px 0 var(--escuro);width:40px;height:40px;font-family:var(--cond);font-size:24px;cursor:pointer;display:grid;place-items:center}
+.nopic{display:grid;place-items:center;height:100%;aspect-ratio:1;color:var(--creme);font-family:var(--mao);font-size:26px;text-align:center;padding:30px}
+@media (max-width:760px){.sheet{grid-template-columns:1fr}.info{padding:20px 18px 24px}}
+body.lock{overflow:hidden}
+
+/* oficinas */
+.ofic{background:var(--rosa);color:var(--escuro)}
+.ofic h2{color:var(--creme);text-shadow:-4px 4px 0 var(--escuro)}
+.ofic .lead{max-width:62ch;margin:0;font-size:18px}
+.ofgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;margin-top:28px}
+.of{background:var(--creme);border:3px solid var(--escuro);box-shadow:6px 6px 0 var(--escuro);padding:22px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.of .hr{font-family:var(--cond);font-size:15px;letter-spacing:2px;text-transform:uppercase;background:var(--escuro);color:var(--amarelo);align-self:flex-start;padding:4px 10px}
+.of h3{font-family:var(--pincel);font-weight:400;font-size:32px;line-height:1.05;margin:0;color:var(--rosa);text-shadow:.05em .05em 0 var(--amarelo)}
+.of .com{font-family:var(--mao);font-size:22px}
+.of p{margin:0;font-size:16px;line-height:1.45}
+.of dl{margin:4px 0 0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:15px}
+.of dt{font-family:var(--cond);letter-spacing:1.5px;text-transform:uppercase;font-size:13px;padding-top:2px}
+.of dd{margin:0}
+.of.tbd{border-style:dashed;box-shadow:none;background:transparent;border-color:var(--escuro)}
+.of.tbd h3{color:var(--escuro);text-shadow:none;opacity:.7}
+.of.tbd p,.of.tbd dd{opacity:.75}
+
+.chegar{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:10px;align-items:stretch}
+.rota{background:var(--amarelo);border:3px solid var(--escuro);box-shadow:5px 5px 0 var(--escuro);padding:16px 18px}
+.rota .k{font-family:var(--cond);letter-spacing:3px;text-transform:uppercase;font-size:13px;margin-bottom:6px}
+.rota p{margin:0;font-size:16px;line-height:1.45}
+.gmap{grid-column:1/-1;border:4px solid var(--escuro);box-shadow:8px 8px 0 var(--escuro);background:var(--creme2);aspect-ratio:16/9;max-width:100%}
+.gmap iframe{display:block;width:100%;height:100%;border:0;filter:sepia(.25) saturate(.9)}
+.apps{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:12px;margin-top:4px}
+.apps .btn{font-family:var(--cond);cursor:pointer;font-size:18px}
+</style>
+<a id="topo"></a>
+<div class="stars" aria-hidden="true"></div>
+<section class="band hero">
+<div class="in">
+<div class="txt">
+<img class="logo" src="img/logo.png" alt="Feira Rastro" width="1200" height="546">
+<div class="date">07.11.2026</div>
+<div class="when"><span>sábado · 15h às 22h</span><span class="tag">entrada gratuita</span></div>
+<div class="ctas"><a class="btn" href="#expositores">quem expõe</a><a class="btn alt" href="https://www.google.com/maps/search/?api=1&query=R.+Padre+Anchieta,+210,+Ramos,+Vi%C3%A7osa+-+MG" target="_blank" rel="noopener">como chegar</a></div>
+</div>
+<div class="dog"><img class="chama" src="img/chama.png" alt="" aria-hidden="true"><img src="img/dog.png" alt="Cachorro da Feira Rastro" width="1100" height="964"></div>
+</div>
+</section>
+<div class="stars" aria-hidden="true"></div>
+<section class="band prog" id="programacao">
+<div class="in">
+<div class="eyebrow">o que rola</div>
+<h2>Um dia inteiro de arte na Casa Flamma</h2>
+<div class="chips"><span class="chip" style="background:var(--rosa);color:var(--creme)">25+ artistas</span><span class="chip" style="background:var(--escuro);color:var(--amarelo)">flash day</span><span class="chip" style="background:var(--creme)">oficinas</span><span class="chip" style="background:var(--rosa);color:var(--creme)">pintura ao vivo</span><span class="chip" style="background:var(--escuro);color:var(--amarelo)">feira de discos</span><span class="chip" style="background:var(--creme)">piercing</span><span class="chip" style="background:var(--rosa);color:var(--creme)">música</span><span class="chip" style="background:var(--creme)">comes &amp; bebes</span></div>
+<div class="grid">
+<div class="item" style="--r:-1deg"><h3>Flash day</h3><p>Tatuadores de Viçosa, BH, Juiz de Fora e região com flashes exclusivos pro dia. Chega cedo: é por ordem de chegada.</p></div>
+<div class="item" style="--r:.8deg"><h3>Arte impressa</h3><p>Prints, gravuras, cianotipias, zines, adesivos, bandeiras e camisas direto da mão de quem fez.</p></div>
+<div class="item" style="--r:-.6deg"><h3>Oficinas</h3><p>Atividades abertas durante a tarde, com os próprios artistas. <a href="#oficinas">Veja as oficinas</a>.</p></div>
+<div class="item" style="--r:1deg"><h3>Pintura ao vivo</h3><p>Tela, parede e pele: artistas pintando enquanto a feira acontece.</p></div>
+<div class="item" style="--r:-.8deg"><h3>Feira de discos</h3><p>Garimpo de vinil com o 1 Disquim, que também toca durante o evento.</p></div>
+<div class="item" style="--r:.6deg"><h3>Piercing</h3><p>Catálogo de joias e perfurações no dia com 20% de desconto.</p></div>
+</div>
+</div>
+</section>
+<div class="stars" aria-hidden="true"></div>
+<section class="band ofic" id="oficinas">
+<div class="in">
+<div class="eyebrow">oficinas</div>
+<h2>Aprende fazendo</h2>
+<p class="lead">Oficinas abertas durante a tarde, com os próprios artistas da feira. Horários e inscrições saem aqui e no @feirarastro.</p>
+<div class="ofgrid"><article class="of tbd"><span class="hr">a confirmar</span><h3>Oficina com Leandro Cotta</h3><div class="com">com Leandro Cotta · @leandrocottta</div><p>[tema da oficina e o que a galera vai aprender]</p><dl><dt>quando</dt><dd>[horário]</dd><dt>vagas</dt><dd>[nº de vagas e como se inscrever]</dd></dl></article><article class="of tbd"><span class="hr">a confirmar</span><h3>Oficina com Endriu Gilbert</h3><div class="com">com Endriu Gilbert · @endriugilbert</div><p>[tema da oficina e o que a galera vai aprender]</p><dl><dt>quando</dt><dd>[horário]</dd><dt>vagas</dt><dd>[nº de vagas e como se inscrever]</dd></dl></article><article class="of tbd"><span class="hr">a confirmar</span><h3>[nome da oficina]</h3><div class="com">com [artista]</div><p>[descrição curta da oficina]</p><dl><dt>quando</dt><dd>[horário]</dd><dt>vagas</dt><dd>[nº de vagas e como se inscrever]</dd></dl></article></div>
+</div>
+</section>
+<div class="stars" aria-hidden="true"></div>
+<section class="band expo" id="expositores">
+<div class="in">
+<div class="eyebrow">quem expõe</div>
+<h2>25+ artistas no mesmo rolê</h2>
+<p style="max-width:62ch;margin:0;font-size:18px">Tatuadores, ilustradores, ceramistas, gravuristas e DJ. Toca na foto pra ver os trabalhos, ou no @ pra ir direto pro Instagram.</p>
+<ul class="cards">
+<li class="card" style="--r:-1.2deg"><button type="button" class="open" data-i="0" aria-label="Ver trabalhos de Leticia Belintani"><img src="img/leticia-belintani.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Leticia Belintani</span><span class="cc">Tattoo</span></button><a class="ci" href="https://instagram.com/leticia_belintani" target="_blank" rel="noopener">@leticia_belintani</a></li><li class="card" style="--r:0.9deg"><button type="button" class="open" data-i="1" aria-label="Ver trabalhos de Endriu Gilbert"><img src="img/endriu-gilbert.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Endriu Gilbert</span><span class="cc">Cerâmica</span></button><a class="ci" href="https://instagram.com/endriugilbert" target="_blank" rel="noopener">@endriugilbert</a></li><li class="card" style="--r:-0.5deg"><button type="button" class="open" data-i="2" aria-label="Ver trabalhos de Lari Fernandes"><img src="img/lari-fernandes.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Lari Fernandes</span><span class="cc">Tattoo</span></button><a class="ci" href="https://instagram.com/larifernandestattoo" target="_blank" rel="noopener">@larifernandestattoo</a></li><li class="card" style="--r:-1.2deg"><button type="button" class="open" data-i="3" aria-label="Ver trabalhos de Ayeska Motta"><img src="img/ayeska-motta.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Ayeska Motta</span><span class="cc">Aprendiz de Tattoo</span></button><a class="ci" href="https://instagram.com/ayeskamotta" target="_blank" rel="noopener">@ayeskamotta</a></li><li class="card" style="--r:0.9deg"><button type="button" class="open" data-i="4" aria-label="Ver trabalhos de Diego Shogun"><img src="img/diego-shogun.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Diego Shogun</span><span class="cc">Tattoo</span></button><a class="ci" href="https://instagram.com/diegoshogun" target="_blank" rel="noopener">@diegoshogun</a></li><li class="card" style="--r:-0.5deg"><button type="button" class="open" data-i="5" aria-label="Ver trabalhos de Cris Valadares"><img src="img/cris-valadares.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Cris Valadares</span><span class="cc">Tattoo</span></button><a class="ci" href="https://instagram.com/crisvaladares.ttt" target="_blank" rel="noopener">@crisvaladares.ttt</a></li><li class="card" style="--r:-1.2deg"><button type="button" class="open" data-i="6" aria-label="Ver trabalhos de Sabrina Werneck"><img src="img/sabrina-werneck.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Sabrina Werneck</span><span class="cc">Artes Visuais</span></button><a class="ci" href="https://instagram.com/sabrinawerneck" target="_blank" rel="noopener">@sabrinawerneck</a></li><li class="card" style="--r:0.9deg"><button type="button" class="open" data-i="7" aria-label="Ver trabalhos de Leandro Cotta"><img src="img/leandro-cotta.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Leandro Cotta</span><span class="cc">Tattoo · Ilustração</span></button><a class="ci" href="https://instagram.com/leandrocottta" target="_blank" rel="noopener">@leandrocottta</a></li><li class="card" style="--r:-0.5deg"><button type="button" class="open" data-i="8" aria-label="Ver trabalhos de Luiz Torrezani"><img src="img/luiz-torrezani.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Luiz Torrezani</span><span class="cc">Tattoo</span></button><a class="ci" href="https://instagram.com/torrezani_art" target="_blank" rel="noopener">@torrezani_art</a></li><li class="card" style="--r:-1.2deg"><button type="button" class="open" data-i="9" aria-label="Ver trabalhos de Crow"><img src="img/crow.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Crow</span><span class="cc">Tattoo</span></button><a class="ci" href="https://instagram.com/crow.ttt" target="_blank" rel="noopener">@crow.ttt</a></li><li class="card" style="--r:0.9deg"><button type="button" class="open" data-i="10" aria-label="Ver trabalhos de Thifany Teodoro"><img src="img/thifany-teodoro.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Thifany Teodoro</span><span class="cc">Tattoo</span></button><a class="ci" href="https://instagram.com/thifaink" target="_blank" rel="noopener">@thifaink</a></li><li class="card" style="--r:-0.5deg"><button type="button" class="open" data-i="11" aria-label="Ver trabalhos de Amanda Lopes"><img src="img/amanda-lopes.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Amanda Lopes</span><span class="cc">Crochê</span></button><a class="ci" href="https://instagram.com/amandal.ilustra" target="_blank" rel="noopener">@amandal.ilustra</a></li><li class="card" style="--r:-1.2deg"><button type="button" class="open" data-i="12" aria-label="Ver trabalhos de Mário Neto"><img src="img/mario-neto.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Mário Neto</span><span class="cc">Tattoo</span></button><a class="ci" href="https://instagram.com/marink.ttt" target="_blank" rel="noopener">@marink.ttt</a></li><li class="card" style="--r:0.9deg"><button type="button" class="open" data-i="13" aria-label="Ver trabalhos de Tassio"><img src="img/tassio.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Tassio</span><span class="cc">Tattoo</span></button><a class="ci" href="https://instagram.com/tassiotattooer" target="_blank" rel="noopener">@tassiotattooer</a></li><li class="card" style="--r:-0.5deg"><button type="button" class="open" data-i="14" aria-label="Ver trabalhos de Letícia Rodrigues"><img src="img/leticia-rodrigues.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Letícia Rodrigues</span><span class="cc">Tattoo · Pintura</span></button><a class="ci" href="https://instagram.com/leticiarodriguesttt" target="_blank" rel="noopener">@leticiarodriguesttt</a></li><li class="card" style="--r:-1.2deg"><button type="button" class="open" data-i="15" aria-label="Ver trabalhos de Alana"><img src="img/alana.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Alana</span><span class="cc">Piercing</span></button><a class="ci" href="https://instagram.com/alanasborba" target="_blank" rel="noopener">@alanasborba</a></li><li class="card" style="--r:0.9deg"><button type="button" class="open" data-i="16" aria-label="Ver trabalhos de Jaumzink"><img src="img/jaumzink.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Jaumzink</span><span class="cc">Tattoo</span></button><a class="ci" href="https://instagram.com/jaumzink" target="_blank" rel="noopener">@jaumzink</a></li><li class="card" style="--r:-0.5deg"><button type="button" class="open" data-i="17" aria-label="Ver trabalhos de Aisku"><img src="img/aisku.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Aisku</span><span class="cc">Aprendiz de Tattoo</span></button><a class="ci" href="https://instagram.com/aisku_ink" target="_blank" rel="noopener">@aisku_ink</a></li><li class="card" style="--r:-1.2deg"><button type="button" class="open" data-i="18" aria-label="Ver trabalhos de Darkz"><img src="img/darkz.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Darkz</span><span class="cc">Tattoo</span></button><a class="ci" href="https://instagram.com/darkz.ttt" target="_blank" rel="noopener">@darkz.ttt</a></li><li class="card" style="--r:0.9deg"><button type="button" class="open" data-i="19" aria-label="Ver trabalhos de Zorc"><img src="img/zorc.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Zorc</span><span class="cc">Tattoo</span></button><a class="ci" href="https://instagram.com/zorctattoo" target="_blank" rel="noopener">@zorctattoo</a></li><li class="card" style="--r:-0.5deg"><button type="button" class="open" data-i="20" aria-label="Ver trabalhos de Gisa Carvalho"><img src="img/gisa-carvalho.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Gisa Carvalho</span><span class="cc">Tattoo</span></button><a class="ci" href="https://instagram.com/gisatattooer" target="_blank" rel="noopener">@gisatattooer</a></li><li class="card" style="--r:-1.2deg"><button type="button" class="open" data-i="21" aria-label="Ver trabalhos de Heitor"><img src="img/heitor.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Heitor</span><span class="cc">Tattoo</span></button><a class="ci" href="https://instagram.com/chingotattoo" target="_blank" rel="noopener">@chingotattoo</a></li><li class="card" style="--r:0.9deg"><button type="button" class="open" data-i="22" aria-label="Ver trabalhos de C. Hokama"><img src="img/c-hokama.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">C. Hokama</span><span class="cc">Aprendiz de Tattoo · Ilustração</span></button><a class="ci" href="https://instagram.com/hokamaillustration" target="_blank" rel="noopener">@hokamaillustration</a></li><li class="card" style="--r:-0.5deg"><button type="button" class="open" data-i="23" aria-label="Ver trabalhos de Marcos Mesmo"><img src="img/marcos-mesmo.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Marcos Mesmo</span><span class="cc">Tattoo · Ilustração</span></button><a class="ci" href="https://instagram.com/omarcosmesmo" target="_blank" rel="noopener">@omarcosmesmo</a></li><li class="card" style="--r:-1.2deg"><button type="button" class="open" data-i="24" aria-label="Ver trabalhos de Laura Carvalho"><img src="img/laura-carvalho.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Laura Carvalho</span><span class="cc">Tattoo · Gravura</span></button><a class="ci" href="https://instagram.com/lauraccarve" target="_blank" rel="noopener">@lauraccarve</a></li><li class="card" style="--r:0.9deg"><button type="button" class="open" data-i="25" aria-label="Ver trabalhos de Dist"><img src="img/dist.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Dist</span><span class="cc">Tattoo</span></button><span class="ci muted">sem instagram</span></li><li class="card" style="--r:-0.5deg"><button type="button" class="open" data-i="26" aria-label="Ver trabalhos de Iago Lonk"><img src="img/iago-lonk.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Iago Lonk</span><span class="cc">Tattoo</span></button><a class="ci" href="https://instagram.com/iagolonktattoos" target="_blank" rel="noopener">@iagolonktattoos</a></li><li class="card" style="--r:-1.2deg"><button type="button" class="open" data-i="27" aria-label="Ver trabalhos de Zita"><img src="img/zita.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">Zita</span><span class="cc">Tattoo · Muralismo</span></button><a class="ci" href="https://instagram.com/zita.ttoo" target="_blank" rel="noopener">@zita.ttoo</a></li><li class="card" style="--r:0.9deg"><button type="button" class="open" data-i="28" aria-label="Ver trabalhos de 1 Disquim"><img src="img/1-disquim.jpg" alt="" loading="lazy" width="480" height="480"><span class="cn">1 Disquim</span><span class="cc">DJ · Feira de Disco</span></button><a class="ci" href="https://instagram.com/1disquim" target="_blank" rel="noopener">@1disquim</a></li>
+</ul>
+</div>
+</section>
+<div class="stars" aria-hidden="true"></div>
+<section class="band local" id="local">
+<div class="in">
+<div>
+<div class="eyebrow">onde e quando</div>
+<h2 style="color:var(--escuro)">Segue o Rastro até a Casa Flamma</h2>
+<p class="addr"><b>Casa Flamma</b>R. Padre Anchieta, 210<br>Ramos · Viçosa/MG</p>
+<p style="max-width:52ch;font-size:17px">É a primeira feira que a Casa Flamma organiza: o estúdio do Diego Shogun abre as portas pra reunir os amigos e a galera que curte o nosso trampo.</p>
+<div class="ctas"><a class="btn alt" href="https://instagram.com/feirarastro" target="_blank" rel="noopener">@feirarastro</a></div>
+</div>
+<div class="ticket">
+<div class="k">data</div><div class="v">sábado, 7 de novembro de 2026</div>
+<div class="k">horário</div><div class="v">das 15h às 22h</div>
+<div class="k">entrada</div><div class="v">gratuita, traz geral!</div>
+<div class="k">flash day</div><div class="v">por ordem de chegada, direto com cada tatuador</div>
+</div>
+<div class="chegar">
+<div class="gmap"><iframe title="Mapa: Casa Flamma, R. Padre Anchieta, 210, Ramos, Viçosa/MG" src="https://www.google.com/maps?q=R.+Padre+Anchieta,+210,+Ramos,+Vi%C3%A7osa+-+MG&z=17&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></div>
+<div class="apps"><a class="btn" href="https://www.google.com/maps/search/?api=1&query=R.+Padre+Anchieta,+210,+Ramos,+Vi%C3%A7osa+-+MG" target="_blank" rel="noopener">Google Maps</a><a class="btn alt" href="https://waze.com/ul?q=R.%20Padre%20Anchieta%2C%20210%2C%20Ramos%2C%20Vi%C3%A7osa%20MG&navigate=yes" target="_blank" rel="noopener">Waze</a><button type="button" class="btn alt" id="copiar">copiar endereço</button></div>
+</div>
+</div>
+</section>
+<div class="stars" aria-hidden="true"></div>
+<footer class="foot">
+<div class="in">
+<div class="cf"><img src="img/casaflamma.png" alt="" width="56" height="56"><div>Casa Flamma<br>R. Padre Anchieta, 210 · Ramos · Viçosa/MG</div></div>
+<div class="apoio"><span class="k">apoio</span><span class="slot"></span><span class="slot"></span><span class="slot"></span></div>
+</div>
+</footer>
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="mname">
+<div class="sheet">
+<button type="button" class="close" id="close" aria-label="Fechar">×</button>
+<div class="pic" id="pic"></div>
+<div class="info"><h3 id="mname"></h3><div class="cat" id="mcat"></div><p id="mbio"></p><div class="k" id="mk">na feira</div><div class="f" id="mf"></div><a class="btn" id="mig" href="#" target="_blank" rel="noopener"></a></div>
+</div></div>
+<script>
+const ART=[{"name": "Leticia Belintani", "cat": "Tattoo", "ig": "@leticia_belintani", "img": "img/leticia-belintani.jpg", "works": ["img/w/leticia-belintani-1.jpg", "img/w/leticia-belintani-2.jpg", "img/w/leticia-belintani-3.jpg", "img/w/leticia-belintani-4.jpg", "img/w/leticia-belintani-5.jpg"], "bio": "Me chamo Leticia Belintani, sou tatuadora há 8 anos e proprietária do estúdio Aura, em Belo Horizonte. Meu estilo favorito de tattoo é o rastelado, o whipshading.", "feira": ""}, {"name": "Endriu Gilbert", "cat": "Cerâmica", "ig": "@endriugilbert", "img": "img/endriu-gilbert.jpg", "works": ["img/w/endriu-gilbert-1.jpg", "img/w/endriu-gilbert-2.jpg", "img/w/endriu-gilbert-3.jpg", "img/w/endriu-gilbert-4.jpg", "img/w/endriu-gilbert-5.jpg", "img/w/endriu-gilbert-6.jpg"], "bio": "Sou sócio fundador do Espaço Terracotta e instrutor de cerâmica, curador pelo Jardim do Sol Nascente e formado em Belas Artes pela Calvin University (2020). Trabalho com pintura, ilustração e cerâmica, além de atender como arteterapeuta.", "feira": "cerâmicas · arte impressa · livros · pinturas"}, {"name": "Lari Fernandes", "cat": "Tattoo", "ig": "@larifernandestattoo", "img": "img/lari-fernandes.jpg", "works": ["img/w/lari-fernandes-1.jpg", "img/w/lari-fernandes-2.jpg", "img/w/lari-fernandes-3.jpg", "img/w/lari-fernandes-4.jpg", "img/w/lari-fernandes-5.jpg"], "bio": "Sou Larissa e sempre fui apaixonada pela arte da tatuagem. Antes mesmo de me tornar tatuadora, já carregava essa paixão na pele. Minha trajetória começou trabalhando em um estúdio de tatuagem na minha cidade, Ponte Nova, onde fui me aproximando desse universo até transformar essa paixão em profissão.", "feira": "flashes autorais, compartilhando um pouco do meu universo artístico"}, {"name": "Ayeska Motta", "cat": "Aprendiz de Tattoo", "ig": "@ayeskamotta", "img": "img/ayeska-motta.jpg", "works": ["img/w/ayeska-motta-1.jpg", "img/w/ayeska-motta-2.jpg", "img/w/ayeska-motta-3.jpg", "img/w/ayeska-motta-4.jpg", "img/w/ayeska-motta-5.jpg"], "bio": "Oie! Me chamo Ayeska, sou nortista, nascida e criada no interior do estado de Rondônia. Vim pra MG há 5 anos à procura de uma realidade que comportasse a artista que eu estava me tornando. Esse ano dei início a uma nova fase na minha arte: virei aprendiz de tattoo na Casa Flamma. Estou fascinada pela forma que o universo da tattoo tem me envolvido de forma tão fluida, orgânica e leve.", "feira": "artes em linogravura"}, {"name": "Diego Shogun", "cat": "Tattoo", "ig": "@diegoshogun", "img": "img/diego-shogun.jpg", "works": ["img/w/diego-shogun-1.jpg", "img/w/diego-shogun-2.jpg", "img/w/diego-shogun-3.jpg", "img/w/diego-shogun-4.jpg", "img/w/diego-shogun-5.jpg", "img/w/diego-shogun-6.jpg"], "bio": "Bão? Sou o Diego, mas a maioria me conhece como Shogun. Tatuo há 12 anos. Comecei com 15, mas só conto a partir do dia em que falei: agora eu tô aprendendo de verdade. Minhas tattoos têm um pé no Japão: anime, games, temática japonesa ou até brasileira, mas na estética da tatuagem japonesa. Hoje tô numa transição pra um tradicional custom, entre o tradicional e o moderno.", "feira": "prints"}, {"name": "Cris Valadares", "cat": "Tattoo", "ig": "@crisvaladares.ttt", "img": "img/cris-valadares.jpg", "works": ["img/w/cris-valadares-1.jpg", "img/w/cris-valadares-2.jpg", "img/w/cris-valadares-3.jpg", "img/w/cris-valadares-4.jpg", "img/w/cris-valadares-5.jpg"], "bio": "Sou o Cris e sou de Juiz de Fora. Gosto muito de tatuagem oldschool, preta ou colorida, com bastante contraste, mesclando o clássico e o moderno, sempre acrescentando elementos que gosto e que me inspiram.", "feira": "peças pintadas à mão, pra diversas decorações"}, {"name": "Sabrina Werneck", "cat": "Artes Visuais", "ig": "@sabrinawerneck", "img": "img/sabrina-werneck.jpg", "works": ["img/w/sabrina-werneck-1.jpg", "img/w/sabrina-werneck-2.jpg", "img/w/sabrina-werneck-3.jpg", "img/w/sabrina-werneck-4.jpg", "img/w/sabrina-werneck-5.jpg"], "bio": "Sou Sabrina Werneck, tenho 25 anos e sou natural de João Monlevade, MG. Minhas produções transitam entre aquarela, tinta a óleo, giz pastel oleoso e arte digital.", "feira": "pinturas · desenhos · arte digital"}, {"name": "Leandro Cotta", "cat": "Tattoo · Ilustração", "ig": "@leandrocottta", "img": "img/leandro-cotta.jpg", "works": ["img/w/leandro-cotta-1.jpg", "img/w/leandro-cotta-2.jpg", "img/w/leandro-cotta-3.jpg", "img/w/leandro-cotta-4.jpg", "img/w/leandro-cotta-5.jpg"], "bio": "Sou artista autoral, de Minas Gerais. Comecei a me interessar por arte desde que soube que ela existe, e vivo dela há 12 anos.", "feira": "oficina · prints · tattoo"}, {"name": "Luiz Torrezani", "cat": "Tattoo", "ig": "@torrezani_art", "img": "img/luiz-torrezani.jpg", "works": ["img/w/luiz-torrezani-1.jpg", "img/w/luiz-torrezani-2.jpg", "img/w/luiz-torrezani-3.jpg", "img/w/luiz-torrezani-4.jpg", "img/w/luiz-torrezani-5.jpg"], "bio": "Luiz Torrezani é artista visual e tatuador, natural de Sete Lagoas, Minas Gerais. Seu contato com o desenho e a pintura começou ainda na infância. Há oito anos, dedica-se profissionalmente à tatuagem.", "feira": "chaveiros · prints · pinturas originais · ecobags"}, {"name": "Crow", "cat": "Tattoo", "ig": "@crow.ttt", "img": "img/crow.jpg", "works": ["img/w/crow-1.jpg", "img/w/crow-2.jpg", "img/w/crow-3.jpg", "img/w/crow-4.jpg", "img/w/crow-5.jpg"], "bio": "Meu nome é Assir, conhecido artisticamente como Crow. Sou residente em Viçosa. Além da tattoo, gosto de explorar o caligraffiti, em telas e no digital, mas levo isso mais como hobby.", "feira": "pinturas · prints · flashes"}, {"name": "Thifany Teodoro", "cat": "Tattoo", "ig": "@thifaink", "img": "img/thifany-teodoro.jpg", "works": ["img/w/thifany-teodoro-1.jpg", "img/w/thifany-teodoro-2.jpg", "img/w/thifany-teodoro-3.jpg", "img/w/thifany-teodoro-4.jpg", "img/w/thifany-teodoro-5.jpg"], "bio": "Meu nome é Thifany Teodoro, sou de Manhuaçu/MG e comecei a tatuar em 2018. Sem imaginar que poderia expandir meu lado artístico por meio de diferentes formas de expressão, essa trajetória me fez vivenciar diferentes fases, dos desafios às conquistas.", "feira": "prints · bandeiras · stickers"}, {"name": "Amanda Lopes", "cat": "Crochê", "ig": "@amandal.ilustra", "img": "img/amanda-lopes.jpg", "works": ["img/w/amanda-lopes-1.jpg", "img/w/amanda-lopes-2.jpg", "img/w/amanda-lopes-3.jpg", "img/w/amanda-lopes-4.jpg", "img/w/amanda-lopes-5.jpg"], "bio": "Meu nome é Amanda Lopes, sou natural de Viçosa e comecei no crochê em 2020, durante a pandemia. Eu era tatuadora na época e, com o estúdio fechado, encontrei no crochê uma nova forma de viver de arte.", "feira": "amigurumis · bolsas · puxa-saco de saruê · bottons · adesivos"}, {"name": "Mário Neto", "cat": "Tattoo", "ig": "@marink.ttt", "img": "img/mario-neto.jpg", "works": ["img/w/mario-neto-1.jpg", "img/w/mario-neto-2.jpg", "img/w/mario-neto-3.jpg", "img/w/mario-neto-4.jpg", "img/w/mario-neto-5.jpg"], "bio": "Sou Mário Neto, tatuador e artista visual de Viçosa/MG. Trabalho com tatuagem há cerca de 7 anos. Venho desenvolvendo uma linguagem artística própria, marcada por traços livres.", "feira": "bandeiras · prints · adesivos"}, {"name": "Tassio", "cat": "Tattoo", "ig": "@tassiotattooer", "img": "img/tassio.jpg", "works": ["img/w/tassio-1.jpg", "img/w/tassio-2.jpg", "img/w/tassio-3.jpg", "img/w/tassio-4.jpg", "img/w/tassio-5.jpg"], "bio": "Meu nome é Tassio, sou tatuador profissional há 22 anos e moro em Juiz de Fora. Comecei a tatuar por influência do hardcore e do graffiti.", "feira": "originais · cianotipias · prints · zine"}, {"name": "Letícia Rodrigues", "cat": "Tattoo · Pintura", "ig": "@leticiarodriguesttt", "img": "img/leticia-rodrigues.jpg", "works": ["img/w/leticia-rodrigues-1.jpg", "img/w/leticia-rodrigues-2.jpg", "img/w/leticia-rodrigues-3.jpg", "img/w/leticia-rodrigues-4.jpg", "img/w/leticia-rodrigues-5.jpg", "img/w/leticia-rodrigues-6.jpg"], "bio": "Sou Letícia Rodrigues, artista plástica e tatuadora, natural de Viçosa/MG. Atuo como tatuadora há mais de 6 anos e, há cerca de 1 ano, venho me desenvolvendo como artista plástica.", "feira": "obras com tecido sob pintura · flashes exclusivos · prints · marcadores de livro · adesivos"}, {"name": "Alana", "cat": "Piercing", "ig": "@alanasborba", "img": "img/alana.jpg", "works": ["img/w/alana-1.jpg", "img/w/alana-2.jpg", "img/w/alana-3.jpg", "img/w/alana-4.jpg", "img/w/alana-5.jpg"], "bio": "Oiê! Me chamo Alana, tenho 26 anos e sou daqui de Viçosa mesmo. Trabalho com piercing há 3 anos.", "feira": "catálogo de joias · perfurações com 20% off"}, {"name": "Jaumzink", "cat": "Tattoo", "ig": "@jaumzink", "img": "img/jaumzink.jpg", "works": ["img/w/jaumzink-1.jpg", "img/w/jaumzink-2.jpg", "img/w/jaumzink-3.jpg", "img/w/jaumzink-4.jpg", "img/w/jaumzink-5.jpg"], "bio": "Oi, eu sou o Jaumzink. Sou natural de Viçosa/MG, tenho 27 anos e sou pai da Helena. Estarei expondo algumas artes na Feira Rastro.", "feira": "tattoo · prints · bandeiras · camisas"}, {"name": "Aisku", "cat": "Aprendiz de Tattoo", "ig": "@aisku_ink", "img": "img/aisku.jpg", "works": ["img/w/aisku-1.jpg", "img/w/aisku-2.jpg", "img/w/aisku-3.jpg", "img/w/aisku-4.jpg", "img/w/aisku-5.jpg"], "bio": "Sveiki! Eu sou a Aisku. Apesar do nickname em lituano, nasci e cresci em Viçosa/MG, e meu nome real é Clara. Muito antes de sonhar em tatuar eu já amava desenhar, desde Clarinha, junto com animes, mangás e jogos.", "feira": "flash tattoos · chaveirinhos · artes e prints · taças de vinho personalizadas"}, {"name": "Darkz", "cat": "Tattoo", "ig": "@darkz.ttt", "img": "img/darkz.jpg", "works": ["img/w/darkz-1.jpg", "img/w/darkz-2.jpg", "img/w/darkz-3.jpg", "img/w/darkz-4.jpg", "img/w/darkz-5.jpg"], "bio": "Sou Darkz, artista independente de Ervália/MG. Desde a infância, o desenho é diversão, descoberta e refúgio. Vejo o que faço como uma busca além do horizonte: onde minha curiosidade alcança, tento tocar com arte.", "feira": "flash tattoo · stickers · prints · bandeiras (se pá)"}, {"name": "Zorc", "cat": "Tattoo", "ig": "@zorctattoo", "img": "img/zorc.jpg", "works": ["img/w/zorc-1.jpg", "img/w/zorc-2.jpg", "img/w/zorc-3.jpg", "img/w/zorc-4.jpg", "img/w/zorc-5.jpg"], "bio": "Sou Kevin Rodrigues, conhecido como Zorc, natural de Viçosa/MG. A arte é meu combustível, assim como minha forma de viver.", "feira": "flashes · prints · adesivos"}, {"name": "Gisa Carvalho", "cat": "Tattoo", "ig": "@gisatattooer", "img": "img/gisa-carvalho.jpg", "works": ["img/w/gisa-carvalho-1.jpg", "img/w/gisa-carvalho-2.jpg", "img/w/gisa-carvalho-3.jpg", "img/w/gisa-carvalho-4.jpg", "img/w/gisa-carvalho-5.jpg"], "bio": "Sou Gisa Carvalho e tatuo há 20 anos. Crio desenhos fortes e precisos, com ar de leveza e sofisticação.", "feira": "cianotipias · prints · flashes"}, {"name": "Heitor", "cat": "Tattoo", "ig": "@chingotattoo", "img": "img/heitor.jpg", "works": ["img/w/heitor-1.jpg", "img/w/heitor-2.jpg", "img/w/heitor-3.jpg", "img/w/heitor-4.jpg", "img/w/heitor-5.jpg"], "bio": "Sou Heitor, vindo dos esconderijos de Viçosa. Comecei a tatuar no início da graduação. Preferi a tattoo à geografia.", "feira": "flashes · designs de tattoo · prints"}, {"name": "C. Hokama", "cat": "Aprendiz de Tattoo · Ilustração", "ig": "@hokamaillustration", "img": "img/c-hokama.jpg", "works": ["img/w/c-hokama-1.jpg", "img/w/c-hokama-2.jpg", "img/w/c-hokama-3.jpg", "img/w/c-hokama-4.jpg", "img/w/c-hokama-5.jpg"], "bio": "Oi, eu sou o Du. Nasci em SP, mas passei a maior parte da vida em MG, entre Viçosa e Juiz de Fora. Sou autodidata, atuo no campo da ilustração e estou iniciando na tattoo.", "feira": "gravuras · flashes"}, {"name": "Marcos Mesmo", "cat": "Tattoo · Ilustração", "ig": "@omarcosmesmo", "img": "img/marcos-mesmo.jpg", "works": ["img/w/marcos-mesmo-1.jpg", "img/w/marcos-mesmo-2.jpg", "img/w/marcos-mesmo-3.jpg", "img/w/marcos-mesmo-4.jpg", "img/w/marcos-mesmo-5.jpg", "img/w/marcos-mesmo-6.jpg"], "bio": "Sou de Sete Lagoas, nascido e criado. Tatuo há 11 anos e sempre quis tornar meu trabalho cada vez mais autoral, misturando minhas referências: neotradicional, blackwork, quadrinhos, concept art e animação.", "feira": "prints · adesivos"}, {"name": "Laura Carvalho", "cat": "Tattoo · Gravura", "ig": "@lauraccarve", "img": "img/laura-carvalho.jpg", "works": ["img/w/laura-carvalho-1.jpg", "img/w/laura-carvalho-2.jpg", "img/w/laura-carvalho-3.jpg", "img/w/laura-carvalho-4.jpg", "img/w/laura-carvalho-5.jpg"], "bio": "Sou natural de Manhuaçu/MG, mas cresci em várias cidades, quase nômade. Desenhar é uma paixão desde a infância e foi como um fio condutor que me fez compreender e me reconhecer em meio às mudanças. Comecei a tatuar em 2019, de forma autodidata, e em 2023 me mudei pra Juiz de Fora pra estudar licenciatura em Artes. A arte salva!", "feira": "gravuras · prints · mosaicos · ecobags · adesivos"}, {"name": "Dist", "cat": "Tattoo", "ig": "", "img": "img/dist.jpg", "works": ["img/w/dist-1.jpg", "img/w/dist-2.jpg", "img/w/dist-3.jpg", "img/w/dist-4.jpg", "img/w/dist-5.jpg"], "bio": "Sou de Belo Horizonte/MG e tatuo há 4 anos. Comecei em casa, enquanto ainda trabalhava numa fábrica de roupas. Entrei buscando melhorar de vida, mas foi amor à primeira tatuagem.", "feira": "prints · pintura · adesivos"}, {"name": "Iago Lonk", "cat": "Tattoo", "ig": "@iagolonktattoos", "img": "img/iago-lonk.jpg", "works": [], "bio": "", "feira": ""}, {"name": "Zita", "cat": "Tattoo · Muralismo", "ig": "@zita.ttoo", "img": "img/zita.jpg", "works": ["img/w/zita-1.jpg", "img/w/zita-2.jpg", "img/w/zita-3.jpg", "img/w/zita-4.jpg", "img/w/zita-5.jpg", "img/w/zita-6.jpg"], "bio": "Sou artista visual e tatuador. Em 2015 entrei em Artes Plásticas na UFES e, em 2016, comecei a tatuar. Hoje minha prática transita entre a tatuagem, o graffiti e a pintura.", "feira": "pintura ao vivo · flashes"}, {"name": "1 Disquim", "cat": "DJ · Feira de Disco", "ig": "@1disquim", "img": "img/1-disquim.jpg", "works": [], "bio": "", "feira": ""}];
+const modal=document.getElementById('modal'),pic=document.getElementById('pic');
+let last=null;
+function openA(i){const a=ART[i];last=document.activeElement;
+ document.getElementById('mname').textContent=a.name;document.getElementById('mcat').textContent=a.cat;
+ document.getElementById('mbio').textContent=a.bio||'';
+ const f=document.getElementById('mf'),k=document.getElementById('mk');f.textContent=a.feira||'';f.hidden=k.hidden=!a.feira;
+ const ig=document.getElementById('mig');if(a.ig){ig.hidden=false;ig.href='https://instagram.com/'+a.ig.slice(1);ig.textContent=a.ig}else ig.hidden=true;
+ if(a.works.length){pic.innerHTML='<div class="track" id="track">'+a.works.map(w=>'<img src="'+w+'" alt="Trabalho de '+a.name+'">').join('')+'</div>'+(a.works.length>1?'<button type="button" class="nav prev" aria-label="Anterior">‹</button><button type="button" class="nav next" aria-label="Próximo">›</button><div class="dots" id="dots">'+a.works.map((_,j)=>'<i class="'+(j?'':'on')+'"></i>').join('')+'</div>':'');
+  const t=document.getElementById('track');const go=d=>t.scrollBy({left:d*t.clientWidth,behavior:'smooth'});
+  pic.querySelector('.prev')?.addEventListener('click',()=>go(-1));pic.querySelector('.next')?.addEventListener('click',()=>go(1));
+  t.addEventListener('scroll',()=>{const j=Math.round(t.scrollLeft/t.clientWidth);document.querySelectorAll('#dots i').forEach((d,x)=>d.classList.toggle('on',x===j))},{passive:true});
+ } else pic.innerHTML='<div class="nopic">as artes chegam em breve ✸ segue no Instagram</div>';
+ modal.hidden=false;document.body.classList.add('lock');document.getElementById('close').focus();}
+function closeA(){modal.hidden=true;document.body.classList.remove('lock');pic.innerHTML='';last&&last.focus()}
+document.querySelectorAll('.open').forEach(b=>b.addEventListener('click',()=>openA(+b.dataset.i)));
+document.getElementById('close').addEventListener('click',closeA);
+modal.addEventListener('click',e=>{if(e.target===modal)closeA()});
+document.addEventListener('keydown',e=>{if(modal.hidden)return;if(e.key==='Escape')closeA();if(e.key==='ArrowRight')pic.querySelector('.next')?.click();if(e.key==='ArrowLeft')pic.querySelector('.prev')?.click()});
+
+const cp=document.getElementById('copiar');cp&&cp.addEventListener('click',async()=>{const t='R. Padre Anchieta, 210 - Ramos, Viçosa - MG';try{await navigator.clipboard.writeText(t);cp.textContent='copiado!';}catch(e){cp.textContent=t}setTimeout(()=>cp.textContent='copiar endereço',2000)});
+</script>
+
+
+</body>
+</html>
