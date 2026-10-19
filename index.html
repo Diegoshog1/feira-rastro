@@ -192,6 +192,21 @@ body.lock{overflow:hidden}
 @keyframes respira{0%,100%{transform:rotate(-3deg) translateY(0)}50%{transform:rotate(-2.6deg) translateY(-3px)}}
 @keyframes cola{0%{opacity:.4;transform:rotate(calc(var(--r,0deg) - 2.5deg)) translateY(14px)}100%{opacity:1;transform:rotate(var(--r,0deg)) translateY(0)}}
 .lambe.colou{animation:cola .9s cubic-bezier(.22,1,.36,1) both;animation-delay:var(--d,0ms)}
+.flip{display:flex;gap:12px;margin:22px 0 8px;align-items:flex-start}
+.flip .lbl{font-family:var(--mao);font-size:24px;margin:34px 4px 0 0}
+.fu{display:flex;flex-direction:column;align-items:center;gap:7px}
+.fu small{font-family:var(--cond);letter-spacing:2px;text-transform:uppercase;font-size:14px}
+.fc{--h:96px;position:relative;width:92px;height:var(--h);font-family:var(--display);font-size:46px;letter-spacing:1px;color:var(--creme);perspective:320px;box-shadow:4px 4px 0 var(--escuro);border-radius:7px}
+.fc>div{position:absolute;left:0;right:0;height:50%;overflow:hidden;background:var(--escuro);backface-visibility:hidden}
+.fc .t,.fc .ft{top:0;border-radius:7px 7px 0 0;background:#4a463d}
+.fc .b,.fc .fb{bottom:0;border-radius:0 0 7px 7px}
+.fc span{position:absolute;left:0;right:0;top:0;height:var(--h);line-height:var(--h);text-align:center}
+.fc .b span,.fc .fb span{top:auto;bottom:0}
+.fc::after{content:"";position:absolute;left:0;right:0;top:calc(50% - 1px);height:2px;background:rgba(0,0,0,.45);z-index:3}
+.fc .ft{transform-origin:50% 100%;animation:fT .28s ease-in forwards;z-index:2}
+.fc .fb{transform-origin:50% 0;transform:rotateX(90deg);animation:fB .28s .28s cubic-bezier(.3,1.6,.5,1) forwards;z-index:2}
+@keyframes fT{to{transform:rotateX(-90deg)}}@keyframes fB{to{transform:rotateX(0)}}
+@media (max-width:760px){.flip{gap:8px}.flip .lbl{display:none}.flip{justify-content:center}.fc{--h:70px;width:66px;font-size:32px}.fu small{font-size:12px}}
 .falta{font-family:var(--cond);background:var(--creme);color:var(--escuro);padding:6px 14px;box-shadow:3px 3px 0 var(--escuro);transform:rotate(-2deg)}
 @media (prefers-reduced-motion:reduce){.hero img.logo,.hero .dog img,.lambe.colou{animation:none!important}}
 
@@ -226,6 +241,7 @@ body.lock{overflow:hidden}
 <img class="logo" src="img/logo.png" alt="Feira Rastro" width="1200" height="546">
 <div class="date">07.11.2026</div>
 <div class="when"><span>sábado · 15h às 22h</span><span class="tag">entrada gratuita</span><span class="falta" id="falta" hidden></span></div>
+<div class="flip" id="flip" role="timer" aria-label="contagem regressiva para a Feira Rastro"><span class="lbl">faltam</span><div class="fu"><div class="fc" aria-hidden="true"></div><small>dias</small></div><div class="fu"><div class="fc" aria-hidden="true"></div><small>horas</small></div><div class="fu"><div class="fc" aria-hidden="true"></div><small>min</small></div><div class="fu"><div class="fc" aria-hidden="true"></div><small>seg</small></div></div>
 <div class="ctas"><a class="btn" href="https://www.sympla.com.br/evento/feira-rastro/3624753" target="_blank" rel="noopener">retirar ingresso grátis</a><a class="btn alt" href="#flashday">flash day</a><a class="btn alt" href="#expositores">quem expõe</a><a class="btn alt" href="https://www.google.com/maps/search/?api=1&query=R.+Padre+Anchieta,+210,+Ramos,+Vi%C3%A7osa+-+MG" target="_blank" rel="noopener">como chegar</a></div>
 </div>
 <div class="dog"><img src="img/dog.png" alt="Cachorro da Feira Rastro" width="1100" height="964"></div>
@@ -385,9 +401,18 @@ if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
 let t=false;function spin(){const y=scrollY;for(const im of imgs)im.style.transform='rotate('+(y*0.35*im.dataset.d).toFixed(1)+'deg)';t=false}
 addEventListener('scroll',()=>{if(!t){t=true;requestAnimationFrame(spin)}},{passive:true});spin()})();
 
+(()=>{const w=document.getElementById('flip');if(!w)return;const ev=new Date('2026-11-07T15:00:00-03:00');const red=matchMedia('(prefers-reduced-motion: reduce)').matches;const cs=[...w.querySelectorAll('.fc')],pv=[];
+const st=v=>'<div class="t"><span>'+v+'</span></div><div class="b"><span>'+v+'</span></div>';
+function set(c,v,i){const o=pv[i];if(o===v)return;pv[i]=v;clearTimeout(c._t);
+if(o===undefined||red||document.hidden){c.innerHTML=st(v);return}
+c.innerHTML='<div class="t"><span>'+v+'</span></div><div class="b"><span>'+o+'</span></div><div class="ft"><span>'+o+'</span></div><div class="fb"><span>'+v+'</span></div>';
+c._t=setTimeout(()=>{c.innerHTML=st(v)},620)}
+function tick(){const s=Math.floor((ev-new Date())/1000);if(s<=0){w.hidden=true;return}
+[Math.floor(s/86400),Math.floor(s%86400/3600),Math.floor(s%3600/60),s%60].map(n=>String(n).padStart(2,'0')).forEach((v,i)=>set(cs[i],v,i))}
+tick();setInterval(tick,1000)})();
 (()=>{const f=document.getElementById('falta');if(!f)return;const ev=new Date('2026-11-07T15:00:00-03:00'),fim=new Date('2026-11-07T22:00:00-03:00');
 function up(){const n=new Date();if(n>fim){f.hidden=true;return}if(n>=ev){f.textContent='tá rolando agora!';f.hidden=false;return}
-const d=Math.ceil((new Date(ev.toDateString())-new Date(n.toDateString()))/864e5);f.textContent=d<=0?'é hoje!':d===1?'é amanhã!':'faltam '+d+' dias';f.hidden=false}
+f.hidden=true}
 up();setInterval(up,6e4)})();
 (()=>{const els=document.querySelectorAll('.item,.card,.of,.passos li,.fatos,.ticket,.tat li');
 if(!('IntersectionObserver' in window)||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
