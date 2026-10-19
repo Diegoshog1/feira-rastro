@@ -41,7 +41,7 @@ h2{font-family:var(--display);font-weight:400;font-size:clamp(34px,5vw,56px);lin
 .hero .in{display:grid;grid-template-columns:1.05fr 1fr;gap:32px;align-items:center}
 .hero img.logo{width:100%;max-width:560px;height:auto;display:block;filter:drop-shadow(0 0 0 transparent)}
 .hero .dog{position:relative}
-.hero .dog img{width:100%;height:auto;display:block;transform:rotate(-3deg);filter:drop-shadow(10px 9px 0 var(--escuro))}
+.hero .dog img:not(.chama){width:100%;height:auto;display:block;transform:rotate(-3deg);filter:drop-shadow(10px 9px 0 var(--escuro));animation:respira 4.5s ease-in-out infinite}
 .hero .chama{position:absolute;left:50%;bottom:-8%;width:140%;transform:translateX(-50%);opacity:.9;pointer-events:none}
 .date{font-family:var(--cond);font-size:clamp(64px,10vw,116px);line-height:.95;letter-spacing:2px;color:var(--escuro);text-shadow:5px 5px 0 var(--amarelo);margin:14px 0 6px}
 .when{font-family:var(--cond);font-size:clamp(20px,2.6vw,28px);letter-spacing:2px;text-transform:uppercase;display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center;margin-bottom:22px}
@@ -74,7 +74,7 @@ h2{font-family:var(--display);font-weight:400;font-size:clamp(34px,5vw,56px);lin
 .local .in{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start}
 .addr{font-family:var(--cond);font-size:clamp(24px,3vw,34px);letter-spacing:1px;text-transform:uppercase;line-height:1.15}
 .addr b{font-family:var(--display);font-weight:400;display:block;font-size:clamp(30px,4vw,44px);color:var(--rosa);text-shadow:3px 3px 0 var(--amarelo);margin-bottom:6px}
-.ticket{background:var(--escuro);color:var(--creme);padding:26px 28px;border:4px dashed var(--amarelo);transform:rotate(1.5deg)}
+.ticket{--r:1.5deg;background:var(--escuro);color:var(--creme);padding:26px 28px;border:4px dashed var(--amarelo);transform:rotate(1.5deg)}
 .ticket .k{font-family:var(--cond);font-size:14px;letter-spacing:3px;text-transform:uppercase;color:var(--amarelo)}
 .ticket .v{font-family:var(--mao);font-size:26px;line-height:1.2;margin:2px 0 14px}
 /* rodapé */
@@ -185,6 +185,15 @@ body.lock{overflow:hidden}
 .fatos b{font-family:var(--cond);font-size:clamp(34px,4vw,48px);line-height:1;letter-spacing:1px}
 .fatos span{font-family:var(--cond);font-size:14px;letter-spacing:2px;text-transform:uppercase}
 @media (max-width:760px){.sobre .in{grid-template-columns:1fr;gap:24px}.fatos{grid-template-columns:1fr 1fr}.fatos div:nth-child(3){border-left:0}.fatos div:nth-child(n+3){border-top:3px solid var(--escuro)}}
+
+/* animações */
+@keyframes carimbo{0%{opacity:.15;transform:translate(-10px,-8px) scale(1.06);filter:drop-shadow(0 0 0 var(--amarelo))}55%{opacity:1;transform:translate(3px,2px) scale(.99)}75%{transform:translate(-1px,0) scale(1.005)}100%{opacity:1;transform:none}}
+.hero img.logo{animation:carimbo .7s cubic-bezier(.2,.8,.3,1) both}
+@keyframes respira{0%,100%{transform:rotate(-3deg) translateY(0)}50%{transform:rotate(-2.2deg) translateY(-4px)}}
+@keyframes cola{0%{transform:rotate(calc(var(--r,0deg) - 6deg)) translateY(22px) scale(.95)}60%{transform:rotate(calc(var(--r,0deg) + 1.2deg)) translateY(-3px) scale(1.01)}100%{transform:rotate(var(--r,0deg)) translateY(0) scale(1)}}
+.lambe.colou{animation:cola .55s cubic-bezier(.2,.8,.3,1) both;animation-delay:var(--d,0ms)}
+.falta{font-family:var(--cond);background:var(--creme);color:var(--escuro);padding:6px 14px;box-shadow:3px 3px 0 var(--escuro);transform:rotate(-2deg)}
+@media (prefers-reduced-motion:reduce){.hero img.logo,.hero .dog img,.lambe.colou{animation:none!important}}
 </style>
 <a id="topo"></a>
 <div class="stars" aria-hidden="true"></div>
@@ -193,7 +202,7 @@ body.lock{overflow:hidden}
 <div class="txt">
 <img class="logo" src="img/logo.png" alt="Feira Rastro" width="1200" height="546">
 <div class="date">07.11.2026</div>
-<div class="when"><span>sábado · 15h às 22h</span><span class="tag">entrada gratuita</span></div>
+<div class="when"><span>sábado · 15h às 22h</span><span class="tag">entrada gratuita</span><span class="falta" id="falta" hidden></span></div>
 <div class="ctas"><a class="btn" href="#flashday">flash day</a><a class="btn alt" href="#expositores">quem expõe</a><a class="btn alt" href="https://www.google.com/maps/search/?api=1&query=R.+Padre+Anchieta,+210,+Ramos,+Vi%C3%A7osa+-+MG" target="_blank" rel="noopener">como chegar</a></div>
 </div>
 <div class="dog"><img class="chama" src="img/chama.png" alt="" aria-hidden="true"><img src="img/dog.png" alt="Cachorro da Feira Rastro" width="1100" height="964"></div>
@@ -336,6 +345,17 @@ fill();addEventListener('resize',fill);
 if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
 let t=false;function spin(){const y=scrollY;for(const im of imgs)im.style.transform='rotate('+(y*0.35*im.dataset.d).toFixed(1)+'deg)';t=false}
 addEventListener('scroll',()=>{if(!t){t=true;requestAnimationFrame(spin)}},{passive:true});spin()})();
+
+(()=>{const f=document.getElementById('falta');if(!f)return;const ev=new Date('2026-11-07T15:00:00-03:00'),fim=new Date('2026-11-07T22:00:00-03:00');
+function up(){const n=new Date();if(n>fim){f.hidden=true;return}if(n>=ev){f.textContent='tá rolando agora!';f.hidden=false;return}
+const d=Math.ceil((new Date(ev.toDateString())-new Date(n.toDateString()))/864e5);f.textContent=d<=0?'é hoje!':d===1?'é amanhã!':'faltam '+d+' dias';f.hidden=false}
+up();setInterval(up,6e4)})();
+(()=>{const els=document.querySelectorAll('.item,.card,.of,.passos li,.fatos,.ticket,.tat li');
+if(!('IntersectionObserver' in window)||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+els.forEach(e=>e.classList.add('lambe'));
+const groups=new Map();
+const io=new IntersectionObserver(es=>{es.forEach(en=>{if(!en.isIntersecting)return;const e=en.target,p=e.parentElement;const k=(groups.get(p)||0);groups.set(p,k+1);e.style.setProperty('--d',(k%8)*70+'ms');e.classList.add('colou');io.unobserve(e)})},{rootMargin:'0px 0px -8% 0px'});
+els.forEach(e=>io.observe(e))})();
 </script>
 
 
