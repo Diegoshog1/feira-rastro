@@ -1,0 +1,19 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Feira Rastro//PT-BR
+BEGIN:VEVENT
+UID:feira-rastro-2026@feirarastro.art
+DTSTAMP:20261019T000000Z
+DTSTART:20261107T180000Z
+DTEND:20261108T010000Z
+SUMMARY:Feira Rastro
+DESCRIPTION:Feira de arte\, flash day\, oficinas\, pintura ao vivo e feira de discos. Entrada gratuita. https://feirarastro.art
+LOCATION:Casa Flamma\, R. Padre Anchieta\, 210 - Ramos\, Viçosa - MG
+URL:https://feirarastro.art
+BEGIN:VALARM
+TRIGGER:-PT3H
+ACTION:DISPLAY
+DESCRIPTION:Feira Rastro hoje às 15h
+END:VALARM
+END:VEVENT
+END:VCALENDAR
