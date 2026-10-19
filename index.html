@@ -30,7 +30,8 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-
 a{color:inherit}
 .band{position:relative;padding-block:clamp(40px,7vw,96px)}
 .in{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.stars{height:34px;background:url(img/estrelas.png) center/auto 100% repeat-x;background-color:var(--escuro)}
+.stars{height:34px;background:var(--escuro);display:flex;align-items:center;justify-content:space-around;overflow:hidden;padding-inline:4px}
+.stars img{width:22px;height:22px;flex:0 0 auto;display:block;will-change:transform}
 h2{font-family:var(--display);font-weight:400;font-size:clamp(34px,5vw,56px);line-height:1;margin:0 0 .5em;text-wrap:balance;letter-spacing:1px}
 .eyebrow{font-family:var(--cond);font-size:16px;letter-spacing:3px;text-transform:uppercase;opacity:.85}
 .chip{font-family:var(--cond);font-size:17px;letter-spacing:1px;text-transform:uppercase;padding:7px 14px;border:3px solid var(--escuro);box-shadow:3px 3px 0 var(--escuro);line-height:1;display:inline-block}
@@ -328,6 +329,13 @@ modal.addEventListener('click',e=>{if(e.target===modal)closeA()});
 document.addEventListener('keydown',e=>{if(modal.hidden)return;if(e.key==='Escape')closeA();if(e.key==='ArrowRight')pic.querySelector('.next')?.click();if(e.key==='ArrowLeft')pic.querySelector('.prev')?.click()});
 
 const cp=document.getElementById('copiar');cp&&cp.addEventListener('click',async()=>{const t='R. Padre Anchieta, 210 - Ramos, Viçosa - MG';try{await navigator.clipboard.writeText(t);cp.textContent='copiado!';}catch(e){cp.textContent=t}setTimeout(()=>cp.textContent='copiar endereço',2000)});
+
+(()=>{const N=14,rows=[...document.querySelectorAll('.stars')],imgs=[];
+function fill(){rows.forEach((r,ri)=>{const n=Math.max(8,Math.ceil(r.clientWidth/30));if(r.childElementCount===n)return;r.innerHTML='';for(let i=0;i<n;i++){const im=new Image();im.src='img/st/s'+((i+ri*5)%N)+'.png';im.alt='';im.width=22;im.height=22;im.dataset.d=(i%2?-1:1)*(0.6+((i*7)%5)/5);r.appendChild(im)}});imgs.length=0;rows.forEach(r=>imgs.push(...r.children))}
+fill();addEventListener('resize',fill);
+if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+let t=false;function spin(){const y=scrollY;for(const im of imgs)im.style.transform='rotate('+(y*0.35*im.dataset.d).toFixed(1)+'deg)';t=false}
+addEventListener('scroll',()=>{if(!t){t=true;requestAnimationFrame(spin)}},{passive:true});spin()})();
 </script>
 
 
