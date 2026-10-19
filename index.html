@@ -170,6 +170,20 @@ body.lock{overflow:hidden}
 .tat button:focus-visible img{outline:3px solid var(--rosa);outline-offset:3px}
 .tat span{font-family:var(--cond);font-size:13px;letter-spacing:.5px;line-height:1.15}
 @media (max-width:760px){.flash .in{grid-template-columns:1fr}}
+
+/* sobre */
+.sobre{background:var(--creme);color:var(--escuro)}
+.sobre .in{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+.sobre .tese{font-family:var(--display);font-weight:400;font-size:clamp(34px,4.6vw,58px);line-height:1.02;margin:10px 0 0;text-wrap:balance}
+.sobre .tese em{font-style:normal;color:var(--rosa);text-shadow:3px 3px 0 var(--amarelo)}
+.sobre .txt{display:flex;flex-direction:column;gap:16px;font-size:18px;line-height:1.55;max-width:58ch;min-width:0}
+.sobre .txt p{margin:0}
+.fatos{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:3px solid var(--escuro);box-shadow:6px 6px 0 var(--escuro);background:var(--amarelo)}
+.fatos div{padding:18px 20px;border-left:3px solid var(--escuro);display:flex;flex-direction:column;gap:4px;min-width:0}
+.fatos div:first-child{border-left:0}
+.fatos b{font-family:var(--cond);font-size:clamp(34px,4vw,48px);line-height:1;letter-spacing:1px}
+.fatos span{font-family:var(--cond);font-size:14px;letter-spacing:2px;text-transform:uppercase}
+@media (max-width:760px){.sobre .in{grid-template-columns:1fr;gap:24px}.fatos{grid-template-columns:1fr 1fr}.fatos div:nth-child(3){border-left:0}.fatos div:nth-child(n+3){border-top:3px solid var(--escuro)}}
 </style>
 <a id="topo"></a>
 <div class="stars" aria-hidden="true"></div>
@@ -182,6 +196,26 @@ body.lock{overflow:hidden}
 <div class="ctas"><a class="btn" href="#flashday">flash day</a><a class="btn alt" href="#expositores">quem expõe</a><a class="btn alt" href="https://www.google.com/maps/search/?api=1&query=R.+Padre+Anchieta,+210,+Ramos,+Vi%C3%A7osa+-+MG" target="_blank" rel="noopener">como chegar</a></div>
 </div>
 <div class="dog"><img class="chama" src="img/chama.png" alt="" aria-hidden="true"><img src="img/dog.png" alt="Cachorro da Feira Rastro" width="1100" height="964"></div>
+</div>
+</section>
+<div class="stars" aria-hidden="true"></div>
+<section class="band sobre" id="sobre">
+<div class="in">
+<div>
+<div class="eyebrow">o que é a feira</div>
+<h2 class="tese">Toda arte deixa um <em>rastro</em>. A gente juntou os de 25+ artistas num dia só.</h2>
+</div>
+<div class="txt">
+<p>A Feira Rastro é uma feira de arte independente feita por quem desenha, grava, pinta, modela e tatua. Tem tatuadores, ilustradores, gravuristas, ceramistas, artesãs e DJ, vindos de Viçosa, Belo Horizonte, Juiz de Fora, Sete Lagoas, Ervália e Manhuaçu.</p>
+<p>Durante a tarde e a noite, a Casa Flamma vira ponto de encontro: mesas com prints, gravuras, zines, cerâmica, crochê e adesivos, um flash day com flashes exclusivos, oficinas com os próprios artistas, pintura ao vivo, feira de discos e música.</p>
+<p>É a primeira feira que a gente organiza. A ideia é simples: aproximar quem faz de quem curte, comprar direto da mão do artista e fortalecer a cena da região. A entrada é gratuita. Traz geral.</p>
+</div>
+<div class="fatos">
+<div><b>25+</b><span>artistas</span></div>
+<div><b>7h</b><span>de feira · 15h às 22h</span></div>
+<div><b>6</b><span>cidades</span></div>
+<div><b>R$ 0</b><span>pra entrar</span></div>
+</div>
 </div>
 </section>
 <div class="stars" aria-hidden="true"></div>
