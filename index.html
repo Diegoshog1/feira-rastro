@@ -192,8 +192,10 @@ body.lock{overflow:hidden}
 @keyframes respira{0%,100%{transform:rotate(-3deg) translateY(0)}50%{transform:rotate(-2.6deg) translateY(-3px)}}
 @keyframes cola{0%{opacity:.4;transform:rotate(calc(var(--r,0deg) - 2.5deg)) translateY(14px)}100%{opacity:1;transform:rotate(var(--r,0deg)) translateY(0)}}
 .lambe.colou{animation:cola .9s cubic-bezier(.22,1,.36,1) both;animation-delay:var(--d,0ms)}
-.flip{display:flex;gap:12px;margin:22px 0 8px;align-items:flex-start}
-.flip .lbl{font-family:var(--mao);font-size:24px;margin:34px 4px 0 0}
+.flip{position:relative;display:flex;gap:12px;margin:38px 0 8px;align-items:flex-start;width:max-content}
+.flip .lbl{position:absolute;z-index:5;left:-14px;top:-24px;font-family:var(--pincel);font-size:26px;line-height:1;color:var(--escuro);background:var(--amarelo);padding:6px 14px 4px;box-shadow:3px 3px 0 var(--escuro);transform:rotate(-6deg);animation:lblBob 3.2s ease-in-out infinite}
+@keyframes lblBob{50%{transform:rotate(-3deg) translateY(-2px)}}
+@media (prefers-reduced-motion:reduce){.flip .lbl{animation:none}}
 .fu{display:flex;flex-direction:column;align-items:center;gap:7px}
 .fu small{font-family:var(--cond);letter-spacing:2px;text-transform:uppercase;font-size:14px}
 .fc{--h:96px;position:relative;width:92px;height:var(--h);font-family:var(--display);font-size:46px;letter-spacing:1px;color:var(--creme);perspective:320px;box-shadow:4px 4px 0 var(--escuro);border-radius:7px}
@@ -206,7 +208,7 @@ body.lock{overflow:hidden}
 .fc .ft{transform-origin:50% 100%;animation:fT .28s ease-in forwards;z-index:2}
 .fc .fb{transform-origin:50% 0;transform:rotateX(90deg);animation:fB .28s .28s cubic-bezier(.3,1.6,.5,1) forwards;z-index:2}
 @keyframes fT{to{transform:rotateX(-90deg)}}@keyframes fB{to{transform:rotateX(0)}}
-@media (max-width:760px){.flip{gap:8px}.flip .lbl{display:none}.flip{justify-content:center}.fc{--h:70px;width:66px;font-size:32px}.fu small{font-size:12px}}
+@media (max-width:760px){.flip{gap:8px;margin-left:auto;margin-right:auto}.flip .lbl{font-size:20px;left:-8px;top:-20px}.fc{--h:70px;width:66px;font-size:32px}.fu small{font-size:12px}}
 .falta{font-family:var(--cond);background:var(--creme);color:var(--escuro);padding:6px 14px;box-shadow:3px 3px 0 var(--escuro);transform:rotate(-2deg)}
 @media (prefers-reduced-motion:reduce){.hero img.logo,.hero .dog img,.lambe.colou{animation:none!important}}
 
@@ -241,7 +243,7 @@ body.lock{overflow:hidden}
 <img class="logo" src="img/logo.png" alt="Feira Rastro" width="1200" height="546">
 <div class="date">07.11.2026</div>
 <div class="when"><span>sábado · 15h às 22h</span><span class="tag">entrada gratuita</span><span class="falta" id="falta" hidden></span></div>
-<div class="flip" id="flip" role="timer" aria-label="contagem regressiva para a Feira Rastro"><span class="lbl">faltam</span><div class="fu"><div class="fc" aria-hidden="true"></div><small>dias</small></div><div class="fu"><div class="fc" aria-hidden="true"></div><small>horas</small></div><div class="fu"><div class="fc" aria-hidden="true"></div><small>min</small></div><div class="fu"><div class="fc" aria-hidden="true"></div><small>seg</small></div></div>
+<div class="flip" id="flip" role="timer" aria-label="contagem regressiva para a Feira Rastro"><span class="lbl" aria-hidden="true">faltam só</span><div class="fu"><div class="fc" aria-hidden="true"></div><small>dias</small></div><div class="fu"><div class="fc" aria-hidden="true"></div><small>horas</small></div><div class="fu"><div class="fc" aria-hidden="true"></div><small>min</small></div><div class="fu"><div class="fc" aria-hidden="true"></div><small>seg</small></div></div>
 <div class="ctas"><a class="btn" href="https://www.sympla.com.br/evento/feira-rastro/3624753" target="_blank" rel="noopener">retirar ingresso grátis</a><a class="btn alt" href="#flashday">flash day</a><a class="btn alt" href="#expositores">quem expõe</a><a class="btn alt" href="https://www.google.com/maps/search/?api=1&query=R.+Padre+Anchieta,+210,+Ramos,+Vi%C3%A7osa+-+MG" target="_blank" rel="noopener">como chegar</a></div>
 </div>
 <div class="dog"><img src="img/dog.png" alt="Cachorro da Feira Rastro" width="1100" height="964"></div>
