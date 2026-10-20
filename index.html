@@ -94,6 +94,12 @@ h2{font-family:var(--display);font-weight:400;font-size:clamp(34px,5vw,56px);lin
 .card button.open img{transition:transform .15s}
 .card:hover button.open img{transform:scale(1.03)}
 .card .cn,.card .cc{display:block}
+.topo{position:fixed;z-index:40;right:calc(max(18px,env(safe-area-inset-right,0px)) + 9px);bottom:calc(max(18px,env(safe-area-inset-bottom,0px)) + 80px);width:46px;height:46px;display:grid;place-items:center;background:var(--creme);border:3px solid var(--escuro);box-shadow:3px 3px 0 var(--escuro);cursor:pointer;padding:0;opacity:0;transform:translateY(16px);pointer-events:none;transition:opacity .4s ease,transform .5s cubic-bezier(.3,1.5,.5,1)}
+.topo.on{opacity:1;transform:none;pointer-events:auto}
+.topo svg{width:22px;height:22px;fill:none;stroke:var(--escuro);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.topo:hover,.topo:focus-visible{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--escuro)}
+@media (max-width:760px){.topo{right:calc(max(18px,env(safe-area-inset-right,0px)) + 5px);bottom:calc(max(18px,env(safe-area-inset-bottom,0px)) + 70px);width:44px;height:44px}}
+@media (prefers-reduced-motion:reduce){.topo{transition:none}}
 .dm{position:fixed;z-index:40;right:max(18px,env(safe-area-inset-right,0px));bottom:max(18px,env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--escuro);opacity:0;transform:translateY(20px) scale(.9);pointer-events:none;transition:opacity .45s ease,transform .55s cubic-bezier(.3,1.5,.5,1)}
 .dm.on{opacity:1;transform:none;pointer-events:auto}
 .dm .fala{font-family:var(--cond);font-size:16px;letter-spacing:1.5px;text-transform:uppercase;background:var(--creme);border:3px solid var(--escuro);box-shadow:3px 3px 0 var(--escuro);padding:8px 14px;position:relative;white-space:nowrap;transform:rotate(-2deg);transition:opacity .3s,transform .3s}
@@ -427,6 +433,7 @@ body.lock{overflow:hidden}
 
 </div>
 </footer>
+<button type="button" class="topo" id="subir" aria-label="Voltar para o topo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5.5 11.5L12 5l6.5 6.5"/></svg></button>
 <a class="dm" id="dm" href="https://ig.me/m/feirarastro" target="_blank" rel="noopener" aria-label="Mandar mensagem no direct do Instagram @feirarastro"><span class="fala">dúvida? chama no direct</span><span class="bola"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5c-4.9 0-8.6 3.5-8.6 8 0 2.4 1 4.4 2.8 5.9v3.1l3-1.6c.9.3 1.8.4 2.8.4 4.9 0 8.6-3.5 8.6-8s-3.7-7.8-8.6-7.8z"/><path d="M7.6 13.6l2.8-3 2 2 3.1-2.9"/></svg></span></a>
 <div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="mname">
 <div class="sheet">
@@ -484,7 +491,7 @@ const groups=new Map();
 const io=new IntersectionObserver(es=>{es.forEach(en=>{if(!en.isIntersecting)return;const e=en.target,p=e.parentElement;const k=(groups.get(p)||0);groups.set(p,k+1);e.style.setProperty('--d',Math.min(k,5)*45+'ms');e.classList.add('colou');io.unobserve(e)})},{rootMargin:'0px 0px 6% 0px',threshold:0});
 els.forEach(e=>io.observe(e))})();
 (()=>{const d=document.getElementById('dm');if(!d)return;const h=document.querySelector('.hero');let shown=false;
-const io=new IntersectionObserver(([e])=>{d.classList.toggle('on',!e.isIntersecting);if(!e.isIntersecting&&!shown){shown=true;setTimeout(()=>d.classList.add('quieto'),5000)}},{threshold:.15});io.observe(h)})();
+const io=new IntersectionObserver(([e])=>{d.classList.toggle('on',!e.isIntersecting);const tp=document.getElementById("subir");tp&&tp.classList.toggle('on',!e.isIntersecting);if(!e.isIntersecting&&!shown){shown=true;setTimeout(()=>d.classList.add('quieto'),5000)}},{threshold:.15});io.observe(h)})();
 (()=>{const f=document.getElementById('pform');if(!f)return;const m=document.getElementById('pmsg'),b=f.querySelector('button');
 f.addEventListener('submit',async e=>{e.preventDefault();if(f._honey.value)return;const fd=new FormData(f);const faz=fd.getAll('faz');fd.delete('faz');fd.append('faz',faz.join(', ')||'-');
 let ig=fd.get('instagram').trim();if(ig&&!ig.startsWith('@')&&!ig.includes('/'))fd.set('instagram','@'+ig);
@@ -492,6 +499,7 @@ b.disabled=true;m.textContent='enviando…';
 try{const r=await fetch(f.action.replace('formsubmit.co/','formsubmit.co/ajax/'),{method:'POST',headers:{Accept:'application/json'},body:fd});if(!r.ok)throw 0;
 f.innerHTML='<div class="ok"><b>Rastro anotado!</b>Valeu. Quando abrir a curadoria da próxima edição, a gente te chama.</div>'}
 catch(_){b.disabled=false;m.textContent='não foi. tenta de novo ou chama no direct.'}})})();
+(()=>{const t=document.getElementById("subir");if(!t)return;t.addEventListener('click',()=>{scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})})})();
 </script>
 
 
