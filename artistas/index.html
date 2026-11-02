@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Guia dos artistas · Feira Rastro</title>
+<meta name="description" content="Tudo o que os artistas da Feira Rastro precisam saber: horários, Flash Day, códigos dos flashes, pagamento, estandes e prazos.">
+<meta name="theme-color" content="#E6305D">
+<link rel="icon" href="../img/casaflamma.png">
+<style>
+@font-face{font-family:'Alfa';src:url(../fonts/alfa.woff2) format('woff2');font-display:swap}
+@font-face{font-family:'BarlowC';src:url(../fonts/barlow.woff2) format('woff2');font-weight:700;font-display:swap}
+@font-face{font-family:'Fredoka';src:url(../fonts/fredoka.woff2) format('woff2');font-weight:600;font-display:swap}
+@font-face{font-family:'Mao';src:url(../fonts/mao.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Pincel';src:url(../fonts/pincel.ttf) format('truetype');font-display:swap}
+:root{--rosa:#E6305D;--amarelo:#F4D21C;--escuro:#413D35;--creme:#FFF6D6;--creme2:#F3E7C6;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--creme);color:var(--escuro);font-family:'Fredoka','Trebuchet MS',sans-serif;font-weight:600;line-height:1.5}
+img{max-width:100%;display:block}
+a{color:inherit}
+.in{max-width:820px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-left,0px))}
+.stars{height:30px;background:var(--escuro) url(../img/estrelas.png) repeat-x center/auto 22px}
+header{background:var(--rosa);padding:40px 0 34px;color:var(--escuro)}
+header img{width:min(320px,70%);height:auto}
+.eyebrow{font-family:'BarlowC','Arial Narrow',sans-serif;letter-spacing:3px;text-transform:uppercase;font-size:15px}
+h1{font-family:'Pincel','Alfa',serif;font-weight:400;font-size:clamp(46px,11vw,84px);line-height:.95;margin:16px 0 8px;color:var(--creme);text-shadow:.05em .05em 0 var(--escuro)}
+header p{margin:0;max-width:560px}
+nav{position:sticky;top:0;z-index:5;background:var(--escuro);padding:10px 0}
+nav .in{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+nav a{flex:none;font-family:'BarlowC',sans-serif;letter-spacing:1px;text-transform:uppercase;font-size:15px;text-decoration:none;background:var(--amarelo);color:var(--escuro);padding:7px 12px}
+section{padding:38px 0 8px}
+h2{font-family:'Alfa',Georgia,serif;font-weight:400;font-size:clamp(28px,6vw,40px);line-height:1.05;margin:0 0 14px}
+h2 small{display:block;font-family:'BarlowC',sans-serif;font-size:15px;letter-spacing:3px;color:var(--rosa);margin-bottom:6px}
+.box{background:#fff9e6;border:3px solid var(--escuro);box-shadow:6px 6px 0 var(--escuro);padding:18px 20px;margin:14px 0}
+.alerta{background:var(--amarelo)}
+.alerta b{color:var(--escuro)}
+.pct{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0}
+.pct div{flex:1 1 140px;background:var(--escuro);color:var(--creme);padding:14px;text-align:center}
+.pct strong{display:block;font-family:'Alfa',serif;font-weight:400;font-size:40px;color:var(--amarelo);line-height:1}
+.pct span{font-family:'BarlowC',sans-serif;letter-spacing:2px;text-transform:uppercase;font-size:14px}
+ul.check{list-style:none;padding:0;margin:0}
+ul.check li{padding:9px 0 9px 30px;border-bottom:2px dashed rgba(65,61,53,.25);position:relative}
+ul.check li::before{content:'✸';position:absolute;left:2px;top:7px;color:var(--rosa);font-size:18px}
+ul.check li:last-child{border-bottom:0}
+.prazos{display:grid;gap:10px}
+.prazo{display:flex;gap:14px;align-items:center;background:var(--escuro);color:var(--creme);padding:12px 16px}
+.prazo .d{flex:none;font-family:'BarlowC',sans-serif;font-size:24px;letter-spacing:1px;background:var(--amarelo);color:var(--escuro);padding:6px 10px;min-width:96px;text-align:center}
+figure{margin:18px 0}
+figure img{border:3px solid var(--escuro);box-shadow:6px 6px 0 var(--escuro);width:100%;height:auto}
+figcaption{font-family:'Mao','Fredoka',sans-serif;color:var(--rosa);margin-top:12px;font-size:18px}
+.btn{display:inline-block;font-family:'BarlowC',sans-serif;letter-spacing:1px;text-transform:uppercase;text-decoration:none;background:var(--rosa);color:var(--creme);border:3px solid var(--escuro);box-shadow:4px 4px 0 var(--escuro);padding:10px 16px;margin:6px 8px 0 0}
+details{border-bottom:2px dashed rgba(65,61,53,.3);padding:12px 0}
+summary{cursor:pointer;font-family:'BarlowC',sans-serif;font-size:19px;letter-spacing:.5px;text-transform:uppercase}
+details p{margin:8px 0 0}
+footer{margin-top:48px;background:var(--escuro);color:var(--creme);padding:28px 0 36px;text-align:center}
+footer p{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="stars" aria-hidden="true"></div>
+<header><div class="in">
+<img src="../img/logo.png" alt="Feira Rastro" width="1200" height="546">
+<div class="eyebrow" style="margin-top:18px">só pra quem expõe e tatua · sáb 07.11 · Casa Flamma</div>
+<h1>GU<span style="display:inline-block;height:.74em;overflow:hidden;vertical-align:baseline;line-height:1"><span style="display:inline-block;transform-origin:50% 100%;transform:translateY(-.22em) scaleY(1.42)">i</span></span>A DOS<br>ART<span style="display:inline-block;height:.74em;overflow:hidden;vertical-align:baseline;line-height:1"><span style="display:inline-block;transform-origin:50% 100%;transform:translateY(-.22em) scaleY(1.42)">i</span></span>STAS</h1>
+<p>Tudo o que você precisa saber pro dia da feira. Se a dúvida não estiver aqui, chama a organização no grupo.</p>
+</div></header>
+<nav aria-label="Seções"><div class="in">
+<a href="#prazos">Prazos</a><a href="#dia">No dia</a><a href="#flash">Flash Day</a><a href="#codigo">Código dos flashes</a><a href="#pagamento">Pagamento</a><a href="#feira">Feira impressa</a><a href="#duvidas">Dúvidas</a>
+</div></nav>
+<main class="in">
+
+<section id="prazos">
+<h2><small>ANOTA AÍ</small>Prazos</h2>
+<div class="prazos">
+<div class="prazo"><span class="d">ATÉ 05.11</span><span>Enviar o arquivo das folhas de flash pro Mário (@marink.ttt), se for imprimir pelo estúdio.</span></div>
+<div class="prazo"><span class="d">ANTES</span><span>Mandar no privado da Ayeska o que vai ser exposto e a quantidade. Avisar se vai precisar de mesa extra.</span></div>
+<div class="prazo"><span class="d">07.11 · 12H</span><span>Chegar na Casa Flamma pra organização e montagem.</span></div>
+<div class="prazo"><span class="d">07.11 · 22H</span><span>Fim da feira. Fica até o final, mesmo que não vá tatuar.</span></div>
+</div>
+</section>
+
+<section id="dia">
+<h2><small>SÁBADO, 07.11</small>No dia do evento</h2>
+<ul class="check">
+<li><b>Chegada a partir do meio-dia</b>, pra organização. A feira abre pro público às 15h.</li>
+<li>O local de cada estande é informado e direcionado no dia pelas organizadoras <b>Ayeska e Larissa</b>. Por isso, chegar cedo faz diferença.</li>
+<li>Endereço: <b>Casa Flamma, R. Padre Anchieta, 210, Ramos, Viçosa/MG</b>.</li>
+</ul>
+<div class="box alerta"><b>É de extrema importância que o artista esteja presente no dia do evento até o horário final (22h), mesmo que não vá tatuar.</b></div>
+</section>
+
+<section id="flash">
+<h2><small>QUEM TATUA NO DIA</small>Flash Day</h2>
+<p>Pela limitação do espaço, <b>só os tatuadores que vêm de fora de Viçosa tatuam no dia do evento</b>.</p>
+<p>Os tatuadores de Viçosa, tanto os da Casa Flamma quanto os de outros estúdios, vendem os flashes na feira e <b>agendam os clientes captados</b> pra outra data. Vamos fazer uma reunião por Meet com os tatuadores de Viçosa pra explicar melhor como vai funcionar.</p>
+<div class="box">
+<b>Impressão das folhas:</b> o estúdio, especificamente o Mário (@marink.ttt), pode imprimir as suas folhas de flash. Pra isso, envie o arquivo com <b>dois dias de antecedência, até quinta, 05.11</b>.
+</div>
+</section>
+
+<section id="codigo">
+<h2><small>ORGANIZAÇÃO DA VENDA</small>Código e preço dos flashes</h2>
+<p>Cada artista tem uma sigla. Todo flash precisa ter um <b>código</b> (sua sigla + um número em sequência) e o <b>preço</b>.</p>
+<ul class="check">
+<li>Exemplo: <b>DS001 · R$ 300</b>, DS002, DS003...</li>
+<li>Coloque o código e o preço <b>já no arquivo, antes de imprimir</b>.</li>
+<li>Não repita número. Se tiver mais de uma folha, continue a contagem de onde parou.</li>
+<li>O jeito de colocar o código e o preço fica a seu critério, pra combinar com a sua folha. Só não pode faltar nenhum dos dois.</li>
+</ul>
+<p>Isso ajuda muito na hora da venda: o cliente fala o código no caixa e a gente já sabe de quem é o flash e quanto custa.</p>
+<figure><img src="codigo-flash.jpg" alt="Esquema: sigla DS mais número 001 forma o código DS001; folha de flash de exemplo com código e preço embaixo de cada desenho" width="1080" height="1350" loading="lazy"><figcaption>a imagem é meramente ilustrativa ✸</figcaption></figure>
+<figure><img src="siglas.jpg" alt="Tabela com a sigla, o nome e o Instagram de cada tatuador do Flash Day" width="1080" height="1350" loading="lazy"><figcaption>procura a sua sigla ✸</figcaption></figure>
+<a class="btn" href="siglas.pdf" download>baixar siglas em PDF</a>
+</section>
+
+<section id="pagamento">
+<h2><small>FLASH DAY</small>Pagamento e acerto</h2>
+<p>O <b>caixa do estúdio recebe todos os valores dos flashes</b>. O cliente não paga direto pro tatuador.</p>
+<div class="pct"><div><strong>70%</strong><span>do tatuador</span></div><div><strong>30%</strong><span>do estúdio</span></div></div>
+<p>O acerto com os tatuadores é feito <b>em até uma semana</b> depois da feira (o quanto antes).</p>
+</section>
+
+<section id="feira">
+<h2><small>QUEM EXPÕE</small>Feira impressa</h2>
+<ul class="check">
+<li>Cada artista tem <b>um espaço com uma mesa</b>.</li>
+<li>Cada um é responsável pelo seu estande: <b>decoração, o que vai expor, a venda e o recebimento do pagamento</b>.</li>
+<li>Precisa de <b>mesa extra</b>? O aluguel é <b>R$ 20,00</b>. Avise com antecedência.</li>
+<li>Mande no privado da Ayeska <b>o que vai ser exposto e a quantidade</b>.</li>
+</ul>
+<figure><img src="espaco.jpg" alt="Esquema do espaço de 42 por 118,8 centímetros: cabem 4 folhas A3 deitadas, 8 A4 em pé, 2 A2 em pé ou combinações" width="1080" height="1350" loading="lazy"><figcaption>o seu espaço e as combinações possíveis ✸</figcaption></figure>
+</section>
+
+<section id="duvidas">
+<h2><small>FICOU DÚVIDA?</small>Perguntas rápidas</h2>
+<details><summary>Sou de Viçosa. Posso tatuar no dia?</summary><p>No dia, quem tatua são os artistas de fora. Você vende seus flashes na feira e agenda os clientes pra outra data. Os detalhes vão ser explicados na reunião por Meet.</p></details>
+<details><summary>Não vou tatuar. Preciso ficar até o fim?</summary><p>Sim. É muito importante que todos os artistas fiquem até o horário final, às 22h.</p></details>
+<details><summary>O cliente pode me pagar direto?</summary><p>Não. Todo pagamento de flash é feito no caixa do estúdio. Você recebe os seus 70% no acerto, em até uma semana.</p></details>
+<details><summary>Na feira impressa, quem recebe o pagamento?</summary><p>Você mesmo. Na feira impressa, cada artista cuida da venda e do recebimento no seu estande.</p></details>
+<details><summary>Como coloco o código no flash?</summary><p>Do jeito que combinar com a sua folha. Só precisa ter o código (sigla + número) e o preço em cada flash, já no arquivo.</p></details>
+<details><summary>Não sei a minha sigla.</summary><p>Ela está na tabela da seção Código dos flashes e no PDF pra baixar. Se o seu nome não estiver lá, chama a organização.</p></details>
+<details><summary>Quem imprime as folhas?</summary><p>Você pode imprimir por conta própria ou mandar o arquivo pro Mário até quinta, 05.11, que o estúdio imprime.</p></details>
+</section>
+</main>
+<footer><div class="in">
+<p style="font-family:'Pincel',serif;font-size:34px;color:var(--amarelo)">VALEU, ARTISTA!</p>
+<p>Feira Rastro · sábado, 07.11 · Casa Flamma, Viçosa/MG</p>
+<p><a href="../">voltar pro site da feira</a></p>
+</div></footer>
+<div class="stars" aria-hidden="true"></div>
+</body>
+</html>
