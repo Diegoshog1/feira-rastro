@@ -634,7 +634,8 @@ const onBench = name => S.benches.find(b => (b.status === 'ocupada' || b.status 
 const lastEnd = name => S.tickets.reduce((m, t) => t.artista === name && t.status === 'concluido' && t.fim > m ? t.fim : m, 0);
 const restUntil = name => { const f = lastEnd(name); return f && S.descanso ? f + S.descanso * 60000 : 0; };
 const resting = name => restUntil(name) > Date.now();
-const callable = () => waiting().filter(t => !onBench(t.artista) && !resting(t.artista));
+const later = t => (t.adiadaAte || 0) > Date.now();
+const callable = () => waiting().filter(t => !onBench(t.artista) && !resting(t.artista) && !later(t));
 const avgMinutes = () => {
   const done = S.tickets.filter(t => t.status === 'concluido' && t.inicio && t.fim);
   if (done.length < 2) return null;
@@ -752,7 +753,7 @@ function renderBenches(){
       body = `<div class="p-artist">${esc(b.artista)}</div><div class="p-client">${b.cliente ? esc(b.cliente) + ' · ' : ''}senha ${pad(b.senhaNum)}</div>
         <div class="meter-l num"><span>Chamado às ${hhmm(b.desde)}</span><span>${dur(b.desde)}</span></div>`;
       acts.push(`<button class="btn pri grow" data-act="start" data-b="${b.id}">Começar</button>`);
-      acts.push(`<button class="btn sm" data-act="skip" data-b="${b.id}">Pular</button>`);
+      acts.push(`<button class="btn sm" data-act="laterAsk" data-t="${esc(b.senha)}">Depois</button>`);
     } else if (b.status === 'ocupada'){
       st = 'Tatuando';
       const m = mins(b.desde);
@@ -796,14 +797,15 @@ function renderQueue(){
     if (first === t) tags.push('<span class="tag">Próxima</span>');
     if (busyAt) tags.push(`<span class="tag">Tatuando na ${two(busyAt.num)}</span>`);
     if (rest) tags.push(`<span class="tag rest">Descansa até ${hhmm(restUntil(t.artista))}</span>`);
-    if (t.pulada) tags.push('<span class="tag">Pulada</span>');
+    if (later(t)) tags.push(`<span class="tag">Depois das ${hhmm(t.adiadaAte)}</span>`);
     const acts = [];
     if (S.mgr) S.benches.filter(b => b.status === 'livre').slice(0, 4).forEach(b => acts.push(`<button class="btn sm" data-act="callTo" data-b="${b.id}" data-t="${t.id}">→ ${two(b.num)}</button>`));
+    if (S.mgr || mine) acts.push(`<button class="btn sm" data-act="laterAsk" data-t="${t.id}">${later(t) ? 'Mudar horário' : 'Depois'}</button>`);
     if (S.mgr || mine) acts.push(`<button class="btn ghost sm" data-act="cancel" data-t="${t.id}">Cancelar</button>`);
-    return `<div class="stub${first === t ? ' next' : ''}${busyAt || rest ? ' wait' : ''}${mine ? ' mine' : ''}">
+    return `<div class="stub${first === t ? ' next' : ''}${busyAt || rest || later(t) ? ' wait' : ''}${mine ? ' mine' : ''}">
       <div class="stub-n" style="grid-row:span ${acts.length ? 2 : 1}"><small>Senha</small><b class="num">${pad(t.num)}</b></div>
       <div class="stub-b"><div class="stub-a">${esc(t.artista)}</div><div class="stub-c">${esc(t.cliente || 'Cliente sem nome')}${t.obs ? ' · ' + esc(t.obs) : ''}</div>${tags.length ? `<div class="tags">${tags.join('')}</div>` : ''}</div>
-      <div class="stub-w num"><span>${dur(t.criadaEm)}</span>${est && !busyAt && !rest ? '~' + est + ' min' : 'na fila'}</div>
+      <div class="stub-w num"><span>${dur(t.criadaEm)}</span>${est && !busyAt && !rest && !later(t) ? '~' + est + ' min' : 'na fila'}</div>
       ${acts.length ? `<div class="stub-x">${acts.join('')}</div>` : ''}
     </div>`;
   }).join('')}</div>`;
@@ -1801,6 +1803,27 @@ const act = {
     await sleep(200);
     await callInto(el.dataset.b);
     toast('Senha voltou pro fim da fila.');
+  }); },
+  laterAsk(el){
+    const t = S.tickets.find(x => x.id === el.dataset.t); if (!t) return;
+    sheet(`<h4>Passar pra depois</h4><p class="hint">Senha ${pad(t.num)} · ${esc(t.cliente || 'Cliente sem nome')} com ${esc(t.artista)}. A senha fica na fila e só é chamada depois desse tempo. Enquanto isso, a bancada vai pra próxima.</p>
+      <div class="row">${[15, 30, 60].map(m => `<button class="btn grow" data-act="laterGo" data-t="${t.id}" data-m="${m}">${m === 60 ? '1 hora' : m + ' min'}</button>`).join('')}</div>
+      ${later(t) ? `<button class="btn hot" data-act="laterGo" data-t="${t.id}" data-m="0">Voltar pra fila agora</button>` : ''}
+      <div class="row"><button class="btn ghost grow" data-act="close">Cancelar</button></div>`);
+  },
+  laterGo(el){ return guard(async () => {
+    const t = S.tickets.find(x => x.id === el.dataset.t); if (!t) return;
+    const m = Number(el.dataset.m), adiadaAte = m ? Date.now() + m * 60000 : 0;
+    closeSheet();
+    if (t.status === 'chamado'){
+      const lb = await lockBench(t.bancada);
+      if (!lb || lb.data.status !== 'chamado' || lb.data.senha !== t.id) return;
+      await S.db.doc('senhas/' + t.id).update({status: 'aguardando', bancada: '', adiadaAte});
+      await lb.ref.update({status: 'livre', artista: '', cliente: '', obs: '', senha: '', senhaNum: 0, desde: Date.now()});
+      await sleep(200); await callInto(t.bancada);
+    } else await S.db.doc('senhas/' + t.id).update({adiadaAte});
+    toast(m ? 'Senha ' + pad(t.num) + ' só volta às ' + hhmm(adiadaAte) + '.' : 'Senha de volta na fila.');
+    await sleep(300); await fillFreeBenches();
   }); },
   release(el){ return guard(async () => {
     const lb = await lockBench(el.dataset.b);
