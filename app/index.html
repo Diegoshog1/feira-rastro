@@ -875,16 +875,17 @@ function renderMine(){
   const sold = mine.length - canc.length + S.sales.filter(v => v.artista === who && toBook(v)).length;
   const durs = feitos.filter(t => t.inicio && t.fim).map(t => (t.fim - t.inicio) / 60000);
   const mySales = S.sales.filter(v => v.artista === who && v.status !== 'cancelada');
+  const inked = feitos.length + mySales.filter(v => toBook(v) && v.tatuado).length;
   const money_ = mySales.reduce((s, v) => s + (Number(v.valor) || 0), 0), net = round2(mySales.reduce((s, v) => s + saleArtist(v), 0));
-  $('meuInfo').textContent = sold ? sold + (sold === 1 ? ' vendido' : ' vendidos') + ' · ' + feitos.length + (feitos.length === 1 ? ' tatuado' : ' tatuados') : '';
+  $('meuInfo').textContent = sold ? sold + (sold === 1 ? ' vendido' : ' vendidos') + ' · ' + inked + (inked === 1 ? ' tatuado' : ' tatuados') : '';
   const myFlashes = S.flashes.filter(f => f.artista === who);
   const tk = v => v.senha && S.tickets.find(x => x.id === v.senha);
   const manual = mine.filter(t => !t.venda && t.status !== 'cancelado').map(t => ({id: t.id, senha: t.id, codigo: '', flashNome: t.obs || 'Senha ' + pad(t.num), cliente: t.cliente, contato: t.contato, insta: t.insta, valor: 0, pago: true, criadaEm: t.criadaEm}));
-  const rank = v => { const t = tk(v); return t ? ({chamado: 0, atendendo: 0, aguardando: 1, concluido: 3}[t.status] ?? 4) : v.agendado ? 3 : 1; };
+  const rank = v => { const t = tk(v); return t ? ({chamado: 0, atendendo: 0, aguardando: 1, concluido: 3}[t.status] ?? 4) : v.tatuado ? 3 : v.agendado ? 2 : 1; };
   const soldList = mySales.concat(manual).sort((a, b) => rank(a) - rank(b) || b.criadaEm - a.criadaEm);
   const soldRow = v => {
     const t = tk(v), f = S.flashes.find(x => x.id === v.flashId), open = S.soldOpen === v.id;
-    const pill = t ? `<span class="pill s-${t.status}">${STATUS[t.status] || t.status}</span>` : `<span class="pill ${v.agendado ? 's-concluido' : 's-aguardando'}">${v.agendado ? 'Agendado' : 'Agendar'}</span>`;
+    const pill = t ? `<span class="pill s-${t.status}">${STATUS[t.status] || t.status}</span>` : `<span class="pill ${v.tatuado ? 's-concluido' : v.agendado ? 's-chamado' : 's-aguardando'}">${v.tatuado ? 'Tatuado' : v.agendado ? 'Agendado' : 'Agendar'}</span>`;
     const src = t || v, ig = igHandle(src.insta), tel = phoneDigits(src.contato);
     const bench = t && t.bancada && S.benches.find(x => x.id === t.bancada);
     const when = ['Vendido às ' + hhmm(v.criadaEm)];
@@ -894,7 +895,11 @@ function renderMine(){
     const acts = [];
     if (tel) acts.push(`<a class="btn sm wa" href="https://wa.me/${tel}" target="_blank" rel="noopener">WhatsApp</a>`);
     if (ig) acts.push(`<a class="btn sm" href="https://instagram.com/${encodeURIComponent(ig)}" target="_blank" rel="noopener">@${esc(ig)}</a>`);
-    if (toBook(v)) acts.push(`<button class="btn ghost sm" data-act="markBooked" data-v="${v.id}" data-on="${v.agendado ? '0' : '1'}">${v.agendado ? 'Desfazer' : 'Já agendei'}</button>`);
+    if (toBook(v)){
+      if (!v.agendado) acts.push(`<button class="btn sm" data-act="markBooked" data-v="${v.id}" data-on="1">Já agendei</button>`);
+      else if (!v.tatuado) acts.push(`<button class="btn sm" data-act="markInked" data-v="${v.id}" data-on="1">Já tatuei</button><button class="btn ghost sm" data-act="markBooked" data-v="${v.id}" data-on="0">Desfazer</button>`);
+      else acts.push(`<button class="btn ghost sm" data-act="markInked" data-v="${v.id}" data-on="0">Desfazer</button>`);
+    }
     if (t) acts.push(`<button class="btn ghost sm" data-act="editJob" data-t="${t.id}">Editar</button>`);
     return `<div class="sold"><button class="sold-h" data-act="soldOpen" data-v="${v.id}" aria-expanded="${open}">
       ${flImg(f, false) || `<span class="sold-ph num">${esc(v.codigo || '–')}</span>`}
@@ -1018,7 +1023,7 @@ function renderSellDay(){
     return `<div class="sale-row ${v.status === 'cancelada' ? 'off' : ''}">
       <div class="sr-n num">${pad(v.num)}<small>${hhmm(v.criadaEm)}</small></div>
       <div class="sr-b"><b>${esc(v.cliente || 'Cliente sem nome')}</b><span>${esc(v.codigo)} · ${esc(v.flashNome || 'flash')} · ${esc(v.artista)}</span>
-        <span class="tags">${v.status === 'cancelada' ? '<span class="tag">Cancelada</span>' : `<span class="tag">${PAY[v.pagamento] || 'Sem forma'}</span>${v.pago ? '' : '<span class="tag due">A receber</span>'}${t ? `<span class="tag">Senha ${pad(t.num)} · ${STATUS[t.status] || ''}</span>` : ''}${toBook(v) ? `<span class="tag">${v.agendado ? 'Agendado' : 'Agendar'}</span>` : ''}`}</span></div>
+        <span class="tags">${v.status === 'cancelada' ? '<span class="tag">Cancelada</span>' : `<span class="tag">${PAY[v.pagamento] || 'Sem forma'}</span>${v.pago ? '' : '<span class="tag due">A receber</span>'}${t ? `<span class="tag">Senha ${pad(t.num)} · ${STATUS[t.status] || ''}</span>` : ''}${toBook(v) ? `<span class="tag">${v.tatuado ? 'Tatuado' : v.agendado ? 'Agendado' : 'Agendar'}</span>` : ''}`}</span></div>
       <div class="sr-v num">${brl(v.valor)}<small>estúdio ${pct(saleCom(v))}</small></div>
       ${v.status === 'cancelada' ? '' : `<div class="sr-x">${v.pago ? '' : `<button class="btn sm" data-act="markPaid" data-v="${v.id}">Marcar pago</button>`}<button class="btn ghost sm" data-act="cancelSale" data-v="${v.id}">Cancelar</button></div>`}
     </div>`;
@@ -1714,6 +1719,7 @@ const act = {
   saleCom(){ S.sale.comTouched = true; renderSell(); },
   saleLocal(el){ S.sale.local = el.dataset.v; S.sale.comTouched = true; $('sCom').value = el.dataset.v === 'casa' ? '30' : '20'; renderSell(); },
   markBooked(el){ const on = el.dataset.on === '1'; return guard(async () => { await S.db.doc('vendas/' + el.dataset.v).update({agendado: on}); toast(on ? 'Marcado como agendado.' : 'Voltou pra agendar.'); }); },
+  markInked(el){ const on = el.dataset.on === '1'; return guard(async () => { await S.db.doc('vendas/' + el.dataset.v).update({tatuado: on, tatuadoEm: on ? Date.now() : 0}); toast(on ? 'Marcado como tatuado.' : 'Voltou pra agendado.'); }); },
   editDay: daySheet,
   saveDay(){ const list = [...document.querySelectorAll('[data-day]')].filter(el => el.checked).map(el => el.dataset.day);
     return guard(async () => { await saveConfig({soAgenda: list}); closeSheet(); toast('Lista salva.'); }); },
