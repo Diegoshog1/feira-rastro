@@ -1294,7 +1294,7 @@ function whoSheet(){
       <div class="field" id="lgPinW" ${S.owner ? 'hidden' : ''}><label class="lbl" for="lgPin">PIN</label><input id="lgPin" type="password" inputmode="numeric" autocomplete="off" maxlength="6"></div>
       <p class="err" id="lgErr" hidden></p>
       <button class="btn hot" data-act="login">Entrar</button>
-      ${S.me ? '<button class="btn ghost" data-act="lgClose">Cancelar</button>' : ''}
+      ${S.me ? `<button class="btn ghost" data-act="lgClose">Voltar</button><button class="btn" data-act="logout">Sair de ${esc(S.me)}</button>` : ''}
       <p class="hint">Primeiro acesso? Use o PIN que você recebeu.</p>
     </div>
   </div>`;
@@ -1623,6 +1623,7 @@ const act = {
   whoami: whoSheet,
   login: doLogin,
   lgClose: closeLogin,
+  logout(){ setMe('', ''); S.tab = 'bancadas'; store.set('aba', 'bancadas'); render(); whoSheet(); },
   lgName(el){
     const k = norm(el.value), hits = nameHits(el.value), one = hits.length === 1 && norm(hits[0]) === k;
     $('lgSug').innerHTML = one ? '' : hits.slice(0, 5).map(n => `<button data-act="lgPick" data-n="${esc(n)}">${esc(n)}</button>`).join('');
