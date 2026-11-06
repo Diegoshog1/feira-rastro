@@ -1,0 +1,1825 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Bancadas Rastro</title>
+<meta name="robots" content="noindex">
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+/* Camada de dados: o app fala com o Firestore. A chave abaixo é pública por natureza; quem protege o banco são as regras dele. */
+(function(){
+  let ready = null;
+  function start(){
+    if (ready) return ready;
+    ready = (async () => {
+      if (!window.firebase) return null;
+      firebase.initializeApp({apiKey: "AIzaSyCeyF433NlOx05IIe2hIdJ36CJd4XsQptg", authDomain: "bancadas-rastro.firebaseapp.com", projectId: "bancadas-rastro", storageBucket: "bancadas-rastro.firebasestorage.app", messagingSenderId: "758900562348", appId: "1:758900562348:web:55040322f66a712c27c209"});
+      await firebase.auth().signInAnonymously();
+      const fdb = firebase.firestore();
+      // Trava curta, com validade: dois celulares não vendem o mesmo flash nem pegam a mesma senha.
+      firebase.firestore.DocumentReference.prototype.acquire = function({holder, ttlMs}){
+        const lock = fdb.doc('travas/' + this.path.replace(/\//g, '_'));
+        return fdb.runTransaction(async t => {
+          const s = await t.get(lock), d = s.data(), now = Date.now();
+          if (d && d.holder !== holder && d.until > now) return {acquired: false};
+          t.set(lock, {holder, until: now + ttlMs});
+          return {acquired: true};
+        }).catch(() => ({acquired: false}));
+      };
+      return fdb;
+    })().catch(() => null);
+    return ready;
+  }
+  const user = {isOwner: async () => false, can: async () => true};
+  const assets = {upload: blob => new Promise((res, rej) => {
+    if (blob.size > 900000) return rej(new Error('Foto grande demais.'));
+    const r = new FileReader(); r.onload = () => res({id: r.result}); r.onerror = rej; r.readAsDataURL(blob);
+  })};
+  window.claude = {use: async k => k === 'db' ? start() : k === 'user' ? user : k === 'assets' ? assets : null};
+})();
+</script>
+
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Barlow+Condensed:wght@500;600;700;800&family=Fredoka:wght@400;500;600&display=swap">
+<style>
+/* Layout: mural de lambe-lambe — faixa de cabeçalho com letreiro rolando, placar carimbado, bancadas como cartazes colados na parede, fila como canhotos de ingresso, avisos como bilhetes com fita. Uma coluna no celular, grade no computador. */
+:root{
+  --bg:#FFF6D6; --paper:#FFFDF3; --ink:#413D35; --ink-soft:#6E685A; --line:rgba(65,61,53,.22); --dot:rgba(65,61,53,.075);
+  --pink:#E6305D; --on-pink:#FFF6D6; --yellow:#F4D21C; --on-yellow:#413D35;
+  --free:#2E8B57; --free-soft:rgba(46,139,87,.14); --shadow:#413D35; --band:#413D35; --on-band:#FFF6D6;
+  --tape:rgba(244,210,28,.78);
+  --display:"Alfa Slab One","Rockwell",Georgia,serif;
+  --label:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Fredoka","Trebuchet MS",system-ui,sans-serif;
+}
+/* sempre na versão clara (creme), independente do modo do celular */
+:root{color-scheme:light}
+
+*{box-sizing:border-box}
+body{background-color:var(--bg);background-image:radial-gradient(var(--dot) 1.1px,transparent 1.4px);background-size:7px 7px;color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.4}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--band)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+.lbl{font-family:var(--label);font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:13px;color:var(--ink-soft)}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1080px;margin:0 auto;padding-block:20px 130px;display:flex;flex-direction:column;gap:34px}
+
+/* cabeçalho */
+.mast{background:var(--band);color:var(--on-band)}
+.mast-in{max-width:1080px;margin:0 auto;padding-block:14px 12px;display:flex;align-items:center;gap:14px 18px;flex-wrap:wrap}
+.logo{display:flex;flex-direction:column;line-height:.9}
+.logo .r{font-family:var(--display);font-size:clamp(34px,8vw,48px);color:var(--pink);text-shadow:3px 3px 0 var(--yellow);letter-spacing:.01em}
+.logo .sub{font-family:var(--label);font-weight:700;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--on-band);margin-top:6px}
+.clock{margin-left:auto;font-family:var(--display);font-size:30px;color:var(--yellow);line-height:1}
+.clock small{display:block;font-family:var(--label);font-size:12px;letter-spacing:.12em;color:var(--on-band);opacity:.7;text-align:right;margin-top:4px}
+.who{display:flex;gap:8px;width:100%;flex-wrap:wrap}
+@media (min-width:720px){.who{width:auto}}
+.chip{border:2px solid var(--on-band);border-radius:999px;padding:6px 14px;background:transparent;color:var(--on-band);font-family:var(--label);font-weight:700;font-size:15px;text-transform:uppercase;letter-spacing:.05em}
+.chip.on{background:var(--yellow);border-color:var(--yellow);color:var(--on-yellow)}
+.chip.me{background:var(--pink);border-color:var(--pink);color:var(--on-pink)}
+.marquee{border-block:2px solid var(--yellow);background:var(--yellow);color:var(--on-yellow);overflow:hidden;white-space:nowrap}
+.marquee .track{display:inline-block;padding:5px 0;font-family:var(--label);font-weight:800;font-size:15px;letter-spacing:.14em;text-transform:uppercase;animation:roll 40s linear infinite}
+@keyframes roll{to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.marquee .track{animation:none}}
+
+/* placar */
+.board{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.board div{display:flex;flex-direction:column;align-items:flex-start;min-width:0}
+.board strong{font-family:var(--display);font-size:clamp(40px,11vw,72px);line-height:.95;color:var(--ink);text-shadow:3px 3px 0 var(--c,var(--pink))}
+.board .free{--c:var(--free)} .board .busy{--c:var(--pink)} .board .q{--c:var(--yellow)} .board .done{--c:var(--line)}
+
+.sechead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:3px solid var(--ink);padding-bottom:8px}
+.sechead h2{margin:0;font-family:var(--display);font-size:clamp(28px,6vw,38px);line-height:1;font-weight:400}
+.sechead .lbl{font-size:14px}
+.live{display:inline-flex;align-items:center;gap:6px}
+.live i{width:9px;height:9px;border-radius:50%;background:var(--free);box-shadow:0 0 0 3px var(--free-soft)}
+.live.off i{background:var(--pink);box-shadow:none}
+
+/* cartazes das bancadas */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:22px 18px}
+.poster{position:relative;background:var(--paper);border:2.5px solid var(--ink);box-shadow:5px 5px 0 var(--shadow);display:flex;flex-direction:column;min-width:0;transform:rotate(var(--tilt,0deg));transition:transform .2s}
+.poster:nth-child(3n+1){--tilt:-.5deg} .poster:nth-child(3n+2){--tilt:.4deg} .poster:nth-child(3n){--tilt:-.2deg}
+.poster:hover{transform:rotate(0deg)}
+.p-head{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 12px 8px;border-bottom:2.5px solid var(--ink);gap:8px}
+.p-num{font-family:var(--display);font-size:58px;line-height:.85;letter-spacing:-.01em}
+.p-name{font-family:var(--label);font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:13px;margin-top:6px;opacity:.85}
+.stamp{font-family:var(--label);font-weight:800;text-transform:uppercase;letter-spacing:.1em;font-size:14px;padding:4px 9px;border:2.5px solid currentColor;transform:rotate(-5deg);margin-top:6px;white-space:nowrap}
+.s-livre .p-head{background:var(--free-soft)}
+.s-livre .p-num{color:var(--ink);text-shadow:3px 3px 0 var(--free)}
+.s-livre .stamp{color:var(--free)}
+.s-chamado .p-head{background:var(--yellow);color:var(--on-yellow)}
+.s-chamado .p-num{text-shadow:3px 3px 0 var(--pink)}
+.s-chamado .stamp{animation:blink 1s steps(2) infinite}
+.s-ocupada .p-head{background:var(--pink);color:var(--on-pink)}
+.s-ocupada .p-num{text-shadow:3px 3px 0 var(--shadow)}
+.s-pausa .p-head{background:repeating-linear-gradient(-45deg,var(--line) 0 8px,transparent 8px 16px)}
+.s-pausa .p-num{color:var(--ink-soft)}
+.s-pausa .stamp{color:var(--ink-soft)}
+@keyframes blink{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.s-chamado .stamp{animation:none}}
+.p-body{padding:12px;display:flex;flex-direction:column;gap:4px;flex:1}
+.p-artist{font-family:var(--display);font-size:24px;line-height:1.05;overflow-wrap:anywhere}
+.p-client{color:var(--ink-soft);overflow-wrap:anywhere}
+.p-empty{color:var(--ink-soft);font-size:15px}
+.meter{height:10px;border:2px solid var(--ink);margin-top:8px;background:var(--bg);overflow:hidden}
+.meter i{display:block;height:100%;background:repeating-linear-gradient(-45deg,var(--pink) 0 6px,var(--yellow) 6px 12px)}
+.meter-l{display:flex;justify-content:space-between;font-family:var(--label);font-weight:700;font-size:14px;letter-spacing:.03em;margin-top:4px}
+.p-acts{display:flex;gap:8px;flex-wrap:wrap;padding:0 12px 12px}
+.poster.mine::after{content:"Você";position:absolute;top:-12px;right:14px;background:var(--yellow);color:var(--on-yellow);font-family:var(--label);font-weight:800;text-transform:uppercase;letter-spacing:.08em;font-size:12px;padding:3px 8px;border:2px solid var(--ink);transform:rotate(3deg)}
+
+.btn{border:2.5px solid var(--ink);background:var(--paper);color:var(--ink);padding:9px 14px;font-family:var(--label);font-weight:800;font-size:16px;text-transform:uppercase;letter-spacing:.05em;line-height:1.1}
+.btn.pri{background:var(--ink);color:var(--bg)}
+.btn.hot{background:var(--pink);color:var(--on-pink);box-shadow:3px 3px 0 var(--shadow)}
+.btn.hot:active,.btn.pri:active{transform:translate(2px,2px);box-shadow:none}
+.btn.ghost{border-color:var(--line);background:transparent}
+.btn.sm{padding:6px 10px;font-size:14px}
+.btn.grow{flex:1}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* canhotos da fila */
+.stubs{display:flex;flex-direction:column;gap:12px}
+.stub{--sw:92px;position:relative;display:grid;grid-template-columns:var(--sw) 1fr auto;background:var(--paper);border:2.5px solid var(--ink);min-width:0}
+.stub::before,.stub::after{content:"";position:absolute;left:calc(var(--sw) - 11px);width:18px;height:18px;border-radius:50%;background:var(--bg);border:2.5px solid var(--ink)}
+.stub::before{top:-11px} .stub::after{bottom:-11px}
+.stub-n{border-right:2.5px dashed var(--ink);padding:10px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.stub-n small{font-family:var(--label);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+.stub-n b{font-family:var(--display);font-weight:400;font-size:34px;line-height:1}
+.stub-b{padding:10px 14px;min-width:0;display:flex;flex-direction:column;gap:2px}
+.stub-a{font-family:var(--display);font-size:19px;line-height:1.1;overflow-wrap:anywhere}
+.stub-c{color:var(--ink-soft);font-size:15px;overflow-wrap:anywhere}
+.stub-w{padding:10px 14px 10px 0;text-align:right;font-family:var(--label);font-weight:700;white-space:nowrap}
+.stub-w span{display:block;font-family:var(--display);font-weight:400;font-size:20px}
+.stub-x{grid-column:2 / -1;display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 12px}
+.stub.next{background:var(--yellow);color:var(--on-yellow)}
+.stub.next .stub-c,.stub.next .stub-n small{color:var(--on-yellow);opacity:.75}
+.stub.next .btn{border-color:var(--on-yellow);color:var(--on-yellow);background:transparent}
+.stub.wait{opacity:.82}
+.stub.mine{box-shadow:5px 5px 0 var(--pink)}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.tag{font-family:var(--label);font-weight:800;text-transform:uppercase;font-size:12px;letter-spacing:.06em;padding:2px 7px;border:2px solid currentColor}
+.tag.rest{color:var(--free)} .stub.next .tag{color:var(--on-yellow)}
+@media (max-width:460px){.stub{--sw:74px}.stub-n b{font-size:28px}.stub-w span{font-size:17px}}
+
+.empty-box{border:2.5px dashed var(--line);padding:22px;color:var(--ink-soft);text-align:center;background:var(--paper)}
+
+/* bilhetes */
+.notes{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:22px 18px;padding-top:8px}
+.note{position:relative;background:var(--paper);border:2px solid var(--line);padding:16px 14px 12px;box-shadow:3px 3px 0 var(--line);transform:rotate(var(--tilt,0deg))}
+.note:nth-child(odd){--tilt:-.7deg} .note:nth-child(even){--tilt:.6deg}
+.note::before{content:"";position:absolute;top:-9px;left:50%;width:70px;height:18px;margin-left:-35px;background:var(--tape);transform:rotate(-3deg)}
+.note.pedido{border-color:var(--pink)}
+.note.pedido::before{background:var(--pink);opacity:.75}
+.note.para-mim{border-color:var(--ink);background:var(--yellow);color:var(--on-yellow)}
+.note .meta{font-family:var(--label);font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.06em;opacity:.75}
+.note p{margin:4px 0 0;font-size:17px;overflow-wrap:anywhere}
+
+/* faixas de alerta */
+.alerts{display:flex;flex-direction:column;gap:12px}
+.banner{border:2.5px solid var(--ink);background:var(--yellow);color:var(--on-yellow);padding:12px 14px;display:flex;gap:12px;align-items:center;box-shadow:4px 4px 0 var(--shadow)}
+.banner .t{flex:1;min-width:0}
+.banner b{font-family:var(--label);font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+.banner button{background:none;border:2px solid currentColor;padding:6px 10px;font-family:var(--label);font-weight:800;text-transform:uppercase;color:inherit}
+.banner.pink{background:var(--pink);color:var(--on-pink)}
+.banner.calm{background:var(--paper);color:var(--ink)}
+.banner.rest{background:var(--free-soft);color:var(--ink)}
+
+/* tela cheia "sua vez" */
+.takeover{position:fixed;inset:0;z-index:40;background-color:var(--pink);background-image:radial-gradient(rgba(0,0,0,.09) 1.4px,transparent 1.8px);background-size:9px 9px;color:var(--on-pink);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:calc(24px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px))}
+.takeover .k{font-family:var(--label);font-weight:800;font-size:18px;letter-spacing:.2em;text-transform:uppercase}
+.takeover h2{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(44px,12vw,90px);line-height:.95;text-shadow:4px 4px 0 var(--shadow)}
+.takeover .big{font-family:var(--display);font-size:clamp(120px,42vw,260px);line-height:.8;color:var(--yellow);text-shadow:8px 8px 0 var(--shadow);animation:bob 1.1s ease-in-out infinite}
+.takeover p{margin:0;font-size:19px;max-width:30ch}
+.takeover .row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.takeover .btn{font-size:20px;padding:14px 20px;border-color:var(--shadow)}
+.takeover .btn.pri{background:var(--shadow);color:#FFF6D6}
+.takeover .btn.ghost{color:var(--on-pink);border-color:var(--on-pink)}
+@keyframes bob{50%{transform:translateY(-8px) rotate(-2deg)}}
+@media (prefers-reduced-motion:reduce){.takeover .big{animation:none}}
+
+/* painel do gerente */
+.mgr{border:2.5px solid var(--ink);background:var(--band);color:var(--on-band);padding:16px;display:flex;flex-direction:column;gap:14px}
+.mgr .lbl{color:var(--on-band);opacity:.75}
+.mgr .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.mgr input,.mgr select{border:2px solid var(--on-band);background:transparent;color:var(--on-band);padding:10px 12px;font-size:16px;border-radius:0}
+.mgr select option{color:#413D35;background:#FFF6D6}
+.mgr .btn{border-color:var(--on-band);background:transparent;color:var(--on-band)}
+.mgr .btn.hot{background:var(--pink);color:var(--on-pink);border-color:var(--pink);box-shadow:3px 3px 0 var(--yellow)}
+
+/* barra de baixo */
+/* meu painel: as senhas de um artista, com contato do cliente */
+.mine-pick{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.mine-pick select{flex:1;min-width:180px;border:2.5px solid var(--ink);background:var(--paper);padding:10px 12px;font-size:17px;border-radius:0}
+.now{border:2.5px solid var(--ink);background:var(--paper);padding:14px;box-shadow:4px 4px 0 var(--pink);display:flex;flex-direction:column;gap:2px}
+.now.rest{box-shadow:4px 4px 0 var(--free)} .now.idle{box-shadow:4px 4px 0 var(--line)}
+.now b{font-family:var(--display);font-weight:400;font-size:22px;line-height:1.1}
+.group{display:flex;flex-direction:column;gap:10px}
+.group h3{margin:6px 0 0;font-family:var(--label);font-weight:800;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+.jobs{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.job{border:2.5px solid var(--ink);background:var(--paper);padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.job.done{opacity:.85;border-style:dashed}
+.job-h{display:flex;align-items:center;gap:8px}
+.job-h .n{font-family:var(--display);font-size:24px;line-height:1}
+.pill{font-family:var(--label);font-weight:800;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border:2px solid currentColor;margin-left:auto;white-space:nowrap}
+.pill.s-atendendo,.pill.s-chamado{background:var(--pink);color:var(--on-pink);border-color:var(--pink)}
+.pill.s-aguardando{background:var(--yellow);color:var(--on-yellow);border-color:var(--yellow)}
+.pill.s-concluido{color:var(--free)} .pill.s-cancelado{color:var(--ink-soft)}
+.job-c{font-family:var(--display);font-size:19px;line-height:1.15;overflow-wrap:anywhere}
+.job-o{color:var(--ink-soft);overflow-wrap:anywhere}
+.job-t{font-family:var(--label);font-weight:700;font-size:14px;letter-spacing:.03em;color:var(--ink-soft)}
+.job-x{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+a.btn{text-decoration:none;display:inline-flex;align-items:center}
+.btn.wa{background:var(--free);color:#fff;border-color:var(--free)}
+details.group summary{cursor:pointer;font-family:var(--label);font-weight:800;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+
+/* vendas: formulário em passos, resumo do dia e catálogo de flashes */
+.seg{display:flex;border:2.5px solid var(--ink);background:var(--paper)}
+.seg button{flex:1;border:0;background:none;padding:11px 8px;font-family:var(--label);font-weight:800;font-size:16px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+.seg button.on{background:var(--ink);color:var(--bg)}
+.sale{display:flex;flex-direction:column;gap:14px}
+.step{border:2.5px solid var(--ink);background:var(--paper);padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:4px 4px 0 var(--line)}
+.step-k{font-family:var(--label);font-weight:800;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:var(--pink)}
+.step-k small{color:var(--ink-soft);letter-spacing:.04em;text-transform:none;font-weight:600}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:420px){.two{grid-template-columns:1fr}}
+.code-row{display:flex;gap:8px}
+.code-row input{flex:1;min-width:0;border:3px solid var(--ink);background:var(--bg);padding:8px 12px;font-family:var(--display);font-size:40px;letter-spacing:.08em;border-radius:0;text-transform:uppercase}
+.match{border:2.5px solid var(--ink);background:var(--yellow);color:var(--on-yellow);padding:12px 14px;display:flex;flex-direction:column;gap:3px;animation:print .3s ease-out}
+.match.bad{background:var(--bg);color:var(--ink);border-color:var(--pink)}
+.match.miss{background:var(--bg);color:var(--ink);border-style:dashed}
+.match.miss span{color:var(--ink-soft)}
+.match-h{display:flex;align-items:center;gap:8px}
+.match .pill{border-color:var(--ink);color:var(--ink);background:transparent}
+.match-a{font-family:var(--display);font-size:28px;line-height:1.05;overflow-wrap:anywhere}
+.match-n{font-size:17px}
+.match-p{font-family:var(--display);font-size:24px}
+.match .job-t{color:inherit;opacity:.8}
+.code{font-family:var(--display);font-size:24px;line-height:1;letter-spacing:.04em}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chips button{flex:1;min-width:72px;border:2.5px solid var(--ink);background:var(--bg);padding:11px 10px;font-family:var(--label);font-weight:800;font-size:16px;letter-spacing:.05em;text-transform:uppercase}
+.chips button.on{background:var(--ink);color:var(--bg)}
+.btn.big{padding:16px;font-size:20px}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+.tools select,.tools input{flex:1;min-width:150px;border:2.5px solid var(--ink);background:var(--paper);padding:10px 12px;font-size:16px;border-radius:0}
+.fls{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.fl{border:2.5px solid var(--ink);background:var(--paper);padding:10px 12px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.fl.sold{opacity:.6;border-style:dashed}
+.fl-h{display:flex;align-items:center;gap:6px}
+.fl-n{font-family:var(--display);font-size:17px;line-height:1.15;overflow-wrap:anywhere}
+.group h3 .btn{margin-left:10px;vertical-align:middle}
+.check{display:flex;gap:10px;align-items:center;font-size:17px}
+.check input{width:22px;height:22px;accent-color:var(--pink)}
+.picks{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow:auto}
+.pick{display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:center;text-align:left;border:2.5px solid var(--ink);background:var(--paper);padding:10px 12px}
+.pk-b{display:flex;flex-direction:column;min-width:0}.pk-b span{color:var(--ink-soft);font-size:15px}
+.board.cash{grid-template-columns:repeat(2,1fr);gap:14px 10px}
+@media (min-width:720px){.board.cash{grid-template-columns:repeat(4,1fr)}}
+.board.cash strong{font-size:clamp(30px,9vw,52px)}
+.pays{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.pays div{border:2.5px solid var(--ink);background:var(--paper);padding:10px 12px;display:flex;flex-direction:column}
+.pays b{font-family:var(--display);font-weight:400;font-size:22px}
+.pays small{color:var(--ink-soft)}
+.arts{border:2.5px solid var(--ink);background:var(--paper)}
+.arts div{display:grid;grid-template-columns:1fr auto auto;gap:4px 12px;padding:9px 12px;border-bottom:1.5px solid var(--line);align-items:baseline}
+.arts div:last-child{border-bottom:0}
+.arts b{font-family:var(--display);font-weight:400;font-size:18px;text-align:right}
+.arts small{grid-column:1 / -1;color:var(--pink);font-weight:600;font-size:14px}
+.arts small:empty{display:none}
+.sales{display:flex;flex-direction:column;gap:8px}
+.sale-row{display:grid;grid-template-columns:56px 1fr auto;gap:4px 12px;border:2.5px solid var(--ink);background:var(--paper);padding:10px 12px;align-items:start}
+.sale-row.off{opacity:.55;border-style:dashed}
+.sr-n{font-family:var(--display);font-size:20px;line-height:1}
+.sr-n small{display:block;font-family:var(--label);font-size:13px;color:var(--ink-soft);margin-top:4px}
+.sr-b{display:flex;flex-direction:column;min-width:0;gap:2px}
+.sr-b>span{color:var(--ink-soft);font-size:15px;overflow-wrap:anywhere}
+.sr-v{font-family:var(--display);font-size:19px}
+.sr-x{grid-column:2 / -1;display:flex;gap:6px;flex-wrap:wrap}
+.tag.due{background:var(--pink);color:var(--on-pink);border-color:var(--pink)}
+.split{display:flex;gap:8px;flex-wrap:wrap}
+.split:empty{display:none}
+.split div{flex:1;min-width:110px;border:2.5px solid var(--ink);background:var(--bg);padding:8px 12px;display:flex;flex-direction:column}
+.split b{font-family:var(--display);font-weight:400;font-size:22px}
+.split small{flex-basis:100%;color:var(--pink);font-weight:600}
+.sr-v small{display:block;font-family:var(--label);font-weight:700;font-size:12px;color:var(--ink-soft);text-align:right;text-transform:uppercase;letter-spacing:.05em}
+.arts em{grid-column:1 / -1;font-style:normal;color:var(--ink-soft);font-size:14px}
+.coms{display:flex;flex-direction:column;border:2.5px solid var(--ink);background:var(--paper);max-height:46vh;overflow:auto}
+.coms label{display:grid;grid-template-columns:1fr 80px 18px;align-items:center;gap:8px;padding:6px 12px;border-bottom:1.5px solid var(--line)}
+.coms label:last-child{border-bottom:0}
+.coms input{border:2px solid var(--ink);background:var(--bg);padding:7px 8px;font-size:17px;text-align:right;border-radius:0;width:100%}
+.coms i{font-style:normal;font-weight:600}
+
+/* app: telas com abas embaixo e botão flutuante */
+[hidden]{display:none !important}
+html{-webkit-text-size-adjust:100%;overscroll-behavior-y:none}
+button{-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+.mast{position:sticky;top:0;z-index:8;box-shadow:0 3px 0 var(--yellow)}
+.mast-in{padding-block:10px}
+.logo .r{font-size:30px;text-shadow:2px 2px 0 var(--yellow)}
+.logo .sub{margin-top:3px;font-size:13px;color:var(--yellow)}
+.clock{font-size:24px}
+.clock small{font-size:11px;margin-top:2px}
+.who{width:auto;margin-left:0}
+@media (max-width:560px){.who{width:100%}.who .chip{flex:1;text-align:center;padding:5px 10px}}
+.screen{display:flex;flex-direction:column;gap:20px;animation:enter .22s ease-out}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}}
+.wrap{padding-block:18px calc(170px + env(safe-area-inset-bottom,0px));gap:18px}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:7;background:var(--band);color:var(--on-band);display:flex;justify-content:center;border-top:3px solid var(--yellow);padding:4px max(8px,env(safe-area-inset-right,0px)) calc(4px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+.tab{flex:1;min-width:0;max-width:160px;background:none;border:0;color:inherit;opacity:.6;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px 6px;font-family:var(--label);font-weight:800;font-size:12px;letter-spacing:.05em;white-space:nowrap;text-transform:uppercase}
+.tab .ic{position:relative;display:grid;place-items:center;width:54px;height:30px;border-radius:999px;transition:background .15s}
+.tab svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.tab.on{opacity:1;color:var(--yellow)}
+.tab.on .ic{background:rgba(244,210,28,.16)}
+.badge{position:absolute;top:-3px;right:2px;min-width:19px;height:19px;padding:0 5px;border-radius:999px;background:var(--pink);color:#FFF6D6;font-family:var(--label);font-size:12px;font-weight:800;line-height:19px;letter-spacing:0;border:2px solid var(--band)}
+.badge.dot{min-width:13px;width:13px;height:13px;padding:0;top:0;right:10px}
+.fab{position:fixed;z-index:7;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(84px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:8px;background:var(--pink);color:var(--on-pink);border:2.5px solid var(--shadow);border-radius:999px;padding:14px 20px 14px 16px;font-family:var(--label);font-weight:800;font-size:18px;letter-spacing:.05em;text-transform:uppercase;box-shadow:4px 4px 0 var(--shadow)}
+.fab:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--shadow)}
+.fab svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.fab.alt{background:var(--yellow);color:var(--on-yellow)}
+@media (min-width:900px){.tabbar{left:50%;right:auto;transform:translateX(-50%);bottom:16px;border:3px solid var(--yellow);box-shadow:5px 5px 0 var(--pink);padding:4px 10px;min-width:520px}
+  .fab{bottom:28px;right:28px}.wrap{padding-bottom:140px}}
+
+/* folhas */
+.sheet-bg{position:fixed;inset:0;z-index:30;background:rgba(14,13,11,.6);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);color:var(--ink);width:100%;max-width:560px;max-height:92%;overflow:auto;border:3px solid var(--ink);border-bottom:0;padding:20px max(18px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px}
+@media (min-width:640px){.sheet-bg{align-items:center}.sheet{border-bottom:3px solid var(--ink);box-shadow:8px 8px 0 var(--pink)}}
+.sheet h4{margin:0;font-family:var(--display);font-weight:400;font-size:30px;line-height:1.05;text-wrap:balance}
+.field{display:flex;flex-direction:column;gap:6px}
+.field input,.field select,.field textarea{border:2.5px solid var(--ink);background:var(--paper);padding:12px;font-size:17px;width:100%;border-radius:0}
+.field textarea{min-height:160px;resize:vertical}
+.sheet .row{display:flex;gap:10px;flex-wrap:wrap}
+.names{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.names button{border:2.5px solid var(--ink);background:var(--paper);padding:12px 10px;font-family:var(--display);font-size:16px;text-align:left;overflow-wrap:anywhere}
+.names button.sel{background:var(--pink);color:var(--on-pink)}
+.hint{color:var(--ink-soft);font-size:15px;margin:0}
+.err{color:var(--pink);font-weight:600;margin:0}
+.printed{align-self:center;width:min(100%,320px);--sw:100px;animation:print .6s cubic-bezier(.2,.8,.3,1)}
+.printed .stub-n b{font-size:46px}
+@keyframes print{from{transform:translateY(-30px);opacity:0}}
+@media (prefers-reduced-motion:reduce){.printed{animation:none}}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(150px + env(safe-area-inset-bottom,0px));z-index:35;background:var(--ink);color:var(--bg);padding:11px 16px;font-family:var(--label);font-weight:800;letter-spacing:.04em;text-transform:uppercase;max-width:calc(100% - 32px);text-align:center;box-shadow:4px 4px 0 var(--pink)}
+.foot{font-size:14px;color:var(--ink-soft);margin:0}
+/* tela de login */
+.login{position:fixed;inset:0;z-index:38;overflow:auto;background-color:var(--pink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:calc(24px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px))}
+.login-logo{width:100%;max-width:380px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.login-logo img{display:block;width:min(100%,340px);height:auto}
+.login-logo span{font-family:var(--label);font-weight:800;font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink)}
+.login-box{width:100%;max-width:380px;background:var(--bg);color:var(--ink);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--ink);padding:20px;display:flex;flex-direction:column;gap:14px}
+.login-sug{display:flex;flex-direction:column;gap:6px}
+.login-sug:empty{display:none}
+.login-sug button{border:2px solid var(--ink);background:var(--paper);padding:10px 12px;text-align:left;font-size:17px;min-height:44px}
+.login .btn{min-height:50px}
+.login .hint{text-align:center}
+/* meu painel: uma coisa de cada vez */
+.me-money{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap}
+.me-money strong{display:block;font-family:var(--display);font-weight:400;font-size:clamp(34px,10vw,46px);line-height:1;margin-top:4px}
+.me-money small{color:var(--ink-soft);font-size:15px}
+.sold-list{display:flex;flex-direction:column;gap:10px}
+.sold{border:2.5px solid var(--ink);background:var(--paper)}
+.sold-h{width:100%;display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 12px 10px 10px;background:none;border:0;text-align:left}
+.sold .fl-tiny,.sold-ph{width:56px;height:56px}
+.sold-ph{display:grid;place-items:center;border:2px solid var(--ink);background:var(--bg);font-family:var(--display);font-size:16px}
+.sold-t{display:flex;flex-direction:column;gap:2px;min-width:0}
+.sold-t b{font-family:var(--display);font-weight:400;font-size:18px;line-height:1.15;overflow-wrap:anywhere}
+.sold-t span{color:var(--ink-soft);font-size:15px;overflow-wrap:anywhere}
+.sold .pill{margin:0}
+.sold-b{border-top:1.5px solid var(--line);padding:12px;display:flex;flex-direction:column;gap:8px}
+.sold-b .fl-img{width:150px}
+.sold-x{display:flex;gap:8px;flex-wrap:wrap}
+#meu{display:flex;flex-direction:column;gap:18px}
+.me-foot{display:flex;justify-content:center;padding-top:6px}
+.fab.mini{font-size:0;gap:0;padding:14px}
+/* fotos dos flashes */
+.fl-img{display:block;width:100%;aspect-ratio:1;object-fit:cover;border:2px solid var(--ink);background:var(--bg);cursor:zoom-in}
+.fl-tiny{display:block;width:60px;height:60px;object-fit:cover;border:2px solid var(--ink);background:var(--bg)}
+.match .fl-img{width:150px;align-self:flex-start}
+.fl-pic{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.fl-pic .fl-img{width:150px;cursor:default}
+.fl-zoom{display:block;width:100%;max-height:70vh;object-fit:contain;background:var(--paper);border:2.5px solid var(--ink)}
+/* tour guiado: destaca a parte real da tela e explica num balão */
+.tour-block{position:fixed;inset:0;z-index:35;background:transparent}
+.tour-hole{position:fixed;z-index:36;border-radius:6px;box-shadow:0 0 0 200vmax rgba(14,13,11,.68);outline:3px solid var(--yellow);pointer-events:none;transition:top .22s ease,left .22s ease,width .22s ease,height .22s ease}
+.tour-hole.none{outline:0}
+.tour-box{position:fixed;z-index:37;width:min(330px,calc(100vw - 24px));background:var(--paper);color:var(--ink);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--pink);padding:14px;display:flex;flex-direction:column;gap:8px;transition:top .22s ease,left .22s ease}
+.tour-box::after{content:"";position:absolute;left:calc(var(--ax,50%) - 9px);width:18px;height:18px;background:var(--paper);border:3px solid var(--ink);transform:rotate(45deg)}
+.tour-box.down::after{top:-11px;border-right:0;border-bottom:0}
+.tour-box.up::after{bottom:-11px;border-left:0;border-top:0}
+.tour-box.mid::after{display:none}
+.tour-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.tour-skip{background:none;border:0;padding:6px 0 6px 10px;font-family:var(--label);font-weight:800;font-size:14px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft)}
+.tour-box h4{margin:0;font-family:var(--display);font-weight:400;font-size:23px;line-height:1.08}
+.tour-box p{margin:0;font-size:16px;line-height:1.35}
+.tour-row{display:flex;gap:8px;margin-top:4px}
+.tour-row .btn{min-height:44px}
+@media (prefers-reduced-motion:reduce){.tour-hole,.tour-box{transition:none}}
+</style>
+
+<header class="mast">
+  <div class="mast-in gut">
+    <div class="logo"><span class="r">Rastro</span><span class="sub" id="screenTitle">Bancadas</span></div>
+    <div class="clock num" id="clock">--:--<small>Flash Day</small></div>
+    <div class="who">
+      <button class="chip on" id="meBtn" data-act="whoami">Quem é você?</button>
+      <button class="chip" data-act="help" aria-label="Como usar o app" style="flex:0 0 auto">?</button>
+    </div>
+  </div>
+  <div class="marquee" hidden aria-hidden="true"><div class="track" id="track"></div></div>
+</header>
+
+<div class="wrap gut">
+  <div id="alerts" class="alerts"></div>
+  <section class="screen" data-screen="bancadas">
+    <div id="summary" class="board"></div>
+    <div class="sechead"><h2>Bancadas</h2><span class="lbl live off" id="sync"><i></i>Conectando…</span></div>
+    <div id="benches" class="grid"></div>
+  </section>
+
+  <section class="screen" data-screen="fila">
+    <div class="sechead"><h2>Fila de senhas</h2><span class="lbl" id="qinfo"></span></div>
+    <div id="queue"></div>
+  </section>
+
+  <section class="screen" data-screen="vender">
+    <div class="seg" role="tablist"><button data-act="sellView" data-v="nova" id="segNova">Nova venda</button><button data-act="sellView" data-v="dia" id="segDia">Vendas do dia</button></div>
+    <div id="sellNew" class="sale">
+      <div class="step">
+        <span class="step-k">1 · Código do flash</span>
+        <div class="code-row"><input id="sCode" data-in="saleCode" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="000" aria-label="Código do flash"><button class="btn" data-act="pickFlash">Procurar</button></div>
+        <div id="sMatch"></div>
+      </div>
+      <div class="step">
+        <span class="step-k">2 · Cliente</span>
+        <div class="field"><label class="lbl" for="sCli">Nome</label><input id="sCli" autocomplete="off" maxlength="60" placeholder="Ex.: Ana Paula"></div>
+        <div class="two">
+          <div class="field"><label class="lbl" for="sTel">WhatsApp</label><input id="sTel" type="tel" inputmode="tel" autocomplete="off" maxlength="20" placeholder="(31) 99999-9999"></div>
+          <div class="field"><label class="lbl" for="sIg">Instagram</label><input id="sIg" autocomplete="off" maxlength="40" placeholder="@cliente"></div>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-k">3 · Pagamento</span>
+        <div class="chips" id="sPay">
+          <button data-act="payMethod" data-v="pix">Pix</button><button data-act="payMethod" data-v="credito">Crédito</button><button data-act="payMethod" data-v="debito">Débito</button><button data-act="payMethod" data-v="dinheiro">Dinheiro</button>
+        </div>
+        <div class="two">
+          <div class="field"><label class="lbl" for="sVal">Valor (R$)</label><input id="sVal" data-in="saleVal" inputmode="decimal" autocomplete="off" maxlength="10" placeholder="0"></div>
+          <div class="field"><label class="lbl" for="sCom">Comissão do estúdio (%)</label><input id="sCom" data-in="saleCom" inputmode="decimal" autocomplete="off" maxlength="5" placeholder="30"></div>
+        </div>
+        <div class="split" id="sSplit"></div>
+        <div class="field"><span class="lbl">Situação</span><div class="chips" id="sPaid"><button data-act="payState" data-v="1">Pago</button><button data-act="payState" data-v="0">A receber</button></div></div>
+      </div>
+      <div class="step">
+        <span class="step-k">4 · Observação <small>(opcional)</small></span>
+        <div class="field"><input id="sObs" autocomplete="off" maxlength="80" placeholder="Ex.: antebraço, um pouco menor" aria-label="Observação"></div>
+      </div>
+      <p class="err" id="sErr" hidden></p>
+      <div class="row"><button class="btn hot grow big" id="sGo" data-act="finishSale">Finalizar venda</button><button class="btn ghost" data-act="clearSale">Limpar</button></div>
+    </div>
+    <div id="sellDay" hidden></div>
+  </section>
+
+  <section class="screen" data-screen="flashes">
+    <div class="sechead"><h2>Flashes</h2><span class="lbl" id="flInfo"></span></div>
+    <div class="tools">
+      <select id="flArt" data-chg="flFilter" aria-label="Filtrar por artista"></select>
+      <input id="flQ" data-in="flSearch" autocomplete="off" placeholder="Buscar código ou nome" aria-label="Buscar flash">
+      <button class="btn hot" data-act="newFlash">+ Cadastrar</button>
+    </div>
+    <div id="flList"></div>
+  </section>
+
+  <section class="screen" data-screen="gerente">
+    <div class="sechead"><h2>Painel do gerente</h2><span class="lbl">Só aparece no modo gerente</span></div>
+    <div class="row"><button class="btn grow" data-act="tab" data-tab="avisos">Ver avisos</button><button class="btn grow" data-act="tab" data-tab="meu">Painel de um artista</button></div>
+    <div id="mgr" class="mgr"></div>
+  </section>
+
+  <section class="screen" data-screen="meu">
+    <div class="sechead"><h2 id="meuTitle">Meu painel</h2><span class="lbl" id="meuInfo"></span></div>
+    <div id="meu"></div>
+  </section>
+
+  <section class="screen" data-screen="avisos">
+    <div class="sechead"><h2>Avisos</h2></div>
+    <div id="feed"></div>
+  </section>
+
+  <p class="foot" id="footnote">Tudo aqui é compartilhado em tempo real: quando alguém ocupa ou libera uma bancada, todo mundo vê na hora.</p>
+</div>
+
+<button class="fab" id="sellBtn" data-act="tab" data-tab="vender" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Nova venda</button>
+<button class="fab alt" id="askBtn" data-act="askMgr" aria-label="Chamar gerente"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>Chamar gerente</button>
+
+<nav class="tabbar" aria-label="Telas">
+  <button class="tab" data-act="tab" data-tab="bancadas"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg><b class="badge" id="bdg-bancadas" hidden></b></span>Bancadas</button>
+  <button class="tab" data-act="tab" data-tab="fila"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5V5.5h17v2a2.5 2.5 0 0 0 0 5v2a2.5 2.5 0 0 0 0 5v-1.5h-17V17a2.5 2.5 0 0 0 0-5v-1a2.5 2.5 0 0 0 0-3.5z"/></svg><b class="badge" id="bdg-fila" hidden></b></span>Fila</button>
+  <button class="tab" data-act="tab" data-tab="vender" data-who="mgr"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h16l-1.5 12h-13zM8.5 7.5a3.5 3.5 0 0 1 7 0"/></svg></span>Vender</button>
+  <button class="tab" data-act="tab" data-tab="flashes" data-who="mgr"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 3.5 6 13.5h5.5l-1 7 7.5-10h-5.5z"/></svg></span>Flashes</button>
+  <button class="tab" data-act="tab" data-tab="meu" data-who="art"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="3.5" width="15" height="17"/><path d="M8 8.5h8M8 12.5h8M8 16.5h5"/></svg><b class="badge" id="bdg-meu" hidden></b></span>Meu painel</button>
+  <button class="tab" data-act="tab" data-tab="avisos" data-who="art"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5h4"/></svg><b class="badge" id="bdg-avisos" hidden></b></span>Avisos</button>
+  <button class="tab" data-act="tab" data-tab="gerente" data-who="mgr"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l7 3v5c0 4.5-3 7.8-7 9-4-1.2-7-4.5-7-9v-5z"/></svg><b class="badge" id="bdg-gerente" hidden></b></span>Gerente</button>
+</nav>
+
+<div id="takeRoot"></div>
+<div id="sheetRoot"></div>
+<div id="tourRoot"></div>
+<div id="loginRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+(function(){
+const TAB = 't' + Math.random().toString(36).slice(2, 9);
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(3, '0');
+const two = n => String(n).padStart(2, '0');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const store = {
+  get(k){ try { return localStorage.getItem('rastro-' + k); } catch(e){ return null; } },
+  set(k, v){ try { v == null ? localStorage.removeItem('rastro-' + k) : localStorage.setItem('rastro-' + k, v); } catch(e){} }
+};
+const hhmm = t => { const d = new Date(t); return two(d.getHours()) + ':' + two(d.getMinutes()); };
+const mins = t => Math.max(0, Math.round((Date.now() - t) / 60000));
+const dur = t => { const m = mins(t); return m < 60 ? m + ' min' : Math.floor(m/60) + 'h' + two(m%60); };
+
+const S = {
+  db: null, user: null, ready: false, readOnly: false,
+  me: store.get('eu'), owner: false, pinFail: 0, pinWait: 0, mgr: false,
+  benches: [], tickets: [], notes: [], artists: [], descanso: 15,
+  seenCalls: new Set(), seenNotes: new Set(), firstNotes: true, hiddenCalls: new Set(),
+  dismissed: store.get('lido') ? Number(store.get('lido')) : 0,
+  sound: false, busy: false,
+  cfg: {}, comPadrao: 30, coms: {},
+  flashes: [], sales: [], sale: {flash: null, pay: '', paid: true, valTouched: false, comTouched: false},
+  sellView: 'nova', flArt: '', flQ: '',
+  tab: store.get('aba') || 'bancadas', seenFeed: Number(store.get('avisos-visto') || 0)
+};
+const TITLES = {bancadas: 'Bancadas', fila: 'Fila de senhas', meu: 'Meu painel', avisos: 'Avisos', gerente: 'Painel do gerente', vender: 'Vendas', flashes: 'Flashes'};
+const MGR_TABS = ['gerente', 'vender', 'flashes'];
+
+$('track').textContent = ('Flash Day ★ 07.11 ★ Casa Flamma ★ Viçosa ★ Toda arte deixa um rastro ★ ').repeat(6);
+
+/* ---------- dados derivados ---------- */
+const benchName = b => b.nome || ('Bancada ' + two(b.num));
+const waiting = () => S.tickets.filter(t => t.status === 'aguardando').sort((a,b) => (a.ordem||0) - (b.ordem||0));
+// Quem não tatua no dia vende o flash e agenda depois: a venda não gera senha.
+const gerentes = () => Array.isArray(S.cfg.gerentes) ? S.cfg.gerentes : [];
+const isMgr = name => !!name && gerentes().includes(name);
+const noDay = name => Array.isArray(S.cfg.soAgenda) && S.cfg.soAgenda.includes(name);
+const toBook = v => v.status !== 'cancelada' && !v.senha;
+const onBench = name => S.benches.find(b => (b.status === 'ocupada' || b.status === 'chamado') && b.artista === name);
+// Rodízio: depois de terminar uma tattoo, o artista descansa S.descanso minutos antes da próxima senha dele ser chamada.
+const lastEnd = name => S.tickets.reduce((m, t) => t.artista === name && t.status === 'concluido' && t.fim > m ? t.fim : m, 0);
+const restUntil = name => { const f = lastEnd(name); return f && S.descanso ? f + S.descanso * 60000 : 0; };
+const resting = name => restUntil(name) > Date.now();
+const callable = () => waiting().filter(t => !onBench(t.artista) && !resting(t.artista));
+const avgMinutes = () => {
+  const done = S.tickets.filter(t => t.status === 'concluido' && t.inicio && t.fim);
+  if (done.length < 2) return null;
+  return done.reduce((s,t) => s + (t.fim - t.inicio), 0) / done.length / 60000;
+};
+
+/* ---------- render ---------- */
+function render(){
+  $('clock').firstChild.textContent = hhmm(Date.now());
+  $('meBtn').textContent = S.me ? S.me : 'Quem é você?';
+  $('meBtn').className = 'chip ' + (S.me ? 'me' : 'on');
+  // Quem vende o flash é o gerente: só ele gera senha. O tatuador só chama o gerente.
+  $('sellBtn').hidden = !S.mgr || S.tab === 'vender'; $('askBtn').hidden = S.mgr; $('askBtn').classList.toggle('mini', S.tab === 'meu');
+  renderTabs();
+  renderTakeover(); renderAlerts(); renderSummary(); renderBenches(); renderQueue(); renderFeed(); renderMine();
+  if (S.mgr){ renderMgr(); renderSell(); renderFlashes(); }
+  tourPlace();
+}
+
+function renderTabs(){
+  if (MGR_TABS.includes(S.tab) && !S.mgr) S.tab = 'bancadas';
+  if (S.tab === 'avisos' && S.notes.length && S.notes[0].criadoEm > S.seenFeed){ S.seenFeed = S.notes[0].criadoEm; store.set('avisos-visto', String(S.seenFeed)); }
+  document.querySelectorAll('.screen').forEach(el => { el.hidden = el.dataset.screen !== S.tab; });
+  document.querySelectorAll('.tab').forEach(el => { const on = el.dataset.tab === S.tab; el.classList.toggle('on', on); el.setAttribute('aria-current', on ? 'page' : 'false'); });
+  document.querySelectorAll('.tab[data-who]').forEach(el => { el.hidden = (el.dataset.who === 'mgr') !== S.mgr; });
+  $('screenTitle').textContent = TITLES[S.tab];
+  const badge = (id, n, dot) => { const el = $('bdg-' + id); el.hidden = !n; el.classList.toggle('dot', !!dot); el.textContent = dot ? '' : (n > 99 ? '99+' : n); };
+  badge('bancadas', S.me && S.benches.some(b => b.artista === S.me && b.status === 'chamado') ? 1 : 0, true);
+  badge('fila', waiting().length);
+  badge('meu', S.me ? S.tickets.filter(t => t.artista === S.me && t.status === 'aguardando').length : 0);
+  badge('avisos', S.notes.filter(n => n.criadoEm > S.seenFeed && (n.tipo === 'aviso' ? (!n.para || n.para === S.me) : S.mgr || n.de === S.me)).length);
+  badge('gerente', S.notes.filter(n => n.tipo === 'pedido' && !n.resolvido).length);
+}
+
+function myCalls(){ return S.me ? S.tickets.filter(t => t.status === 'chamado' && t.artista === S.me) : []; }
+
+function renderTakeover(){
+  const t = myCalls().find(x => !S.hiddenCalls.has(x.id));
+  if (!t){ $('takeRoot').innerHTML = ''; return; }
+  const b = S.benches.find(x => x.id === t.bancada);
+  if ($('takeRoot').dataset.id === t.id && $('takeRoot').innerHTML) return;
+  $('takeRoot').dataset.id = t.id;
+  $('takeRoot').innerHTML = `<div class="takeover" role="alertdialog" aria-label="Sua vez">
+    <span class="k">Senha ${pad(t.num)} · ${esc(S.me)}</span>
+    <h2>Sua vez!</h2>
+    <div class="big num">${b ? two(b.num) : '--'}</div>
+    <p>Vá para a <b>${esc(b ? benchName(b) : 'bancada')}</b>${t.cliente ? ' com <b>' + esc(t.cliente) + '</b>' : ''}${t.obs ? ' · ' + esc(t.obs) : ''}.</p>
+    <div class="row"><button class="btn pri" data-act="start" data-b="${esc(t.bancada)}">Cheguei, começar</button><button class="btn ghost" data-act="hideCall" data-t="${t.id}">Tô indo (parar alarme)</button></div>
+  </div>`;
+}
+
+function renderAlerts(){
+  const out = [], home = S.tab === 'bancadas'; // nas outras abas só fica o que não pode esperar
+
+  myCalls().filter(t => S.hiddenCalls.has(t.id)).forEach(t => {
+    const b = S.benches.find(x => x.id === t.bancada);
+    out.push(`<div class="banner pink" role="alert"><div class="t"><b>Sua vez · ${esc(b ? benchName(b) : 'bancada')}</b><br>Senha ${pad(t.num)}${t.cliente ? ' · ' + esc(t.cliente) : ''}</div><button data-act="start" data-b="${esc(t.bancada)}">Começar</button></div>`);
+  });
+  if (home && S.me && resting(S.me) && !onBench(S.me)){
+    const mineNext = waiting().find(t => t.artista === S.me);
+    out.push(`<div class="banner rest"><div class="t"><b>Descanso até ${hhmm(restUntil(S.me))}</b><br>${mineNext ? 'Sua próxima senha (' + pad(mineNext.num) + ') só é chamada depois disso.' : 'Respira, bebe uma água. Nenhuma senha sua na fila.'}</div></div>`);
+  }
+  const latest = S.notes.find(n => n.tipo === 'aviso' && n.criadoEm > S.dismissed && (!n.para || n.para === S.me));
+  if (latest && home){
+    out.push(`<div class="banner" role="status"><div class="t"><b>${latest.para ? 'Pra você' : 'Aviso'} · ${hhmm(latest.criadoEm)}</b><br>${esc(latest.texto)}</div><button data-act="dismiss" data-t="${latest.criadoEm}">Ok</button></div>`);
+  }
+  if (S.mgr && (home || S.tab === 'gerente')){
+    S.notes.filter(n => n.tipo === 'pedido' && !n.resolvido).slice(0,3).forEach(n => out.push(`<div class="banner pink"><div class="t"><b>${esc(n.de || 'Alguém')} chamou · ${hhmm(n.criadoEm)}</b><br>${esc(n.texto)}</div><button data-act="resolve" data-id="${n.id}">Resolvido</button></div>`));
+  }
+  if (!S.sound && S.ready) out.push(`<div class="banner calm"><div class="t">Ative o som para ouvir quando chamarem sua senha. Deixe esta tela aberta.</div><button data-act="sound">Ativar som</button></div>`);
+  $('alerts').innerHTML = out.join('');
+  $('alerts').hidden = !out.length;
+}
+
+function renderSummary(){
+  const free = S.benches.filter(b => b.status === 'livre').length;
+  const busy = S.benches.filter(b => b.status === 'ocupada' || b.status === 'chamado').length;
+  const q = waiting().length;
+  const done = S.tickets.filter(t => t.status === 'concluido').length;
+  $('summary').innerHTML = `
+    <div class="free"><strong class="num">${free}</strong><span class="lbl">Livres</span></div>
+    <div class="busy"><strong class="num">${busy}</strong><span class="lbl">Em uso</span></div>
+    <div class="q"><strong class="num">${q}</strong><span class="lbl">Na fila</span></div>
+    <div class="done"><strong class="num">${done}</strong><span class="lbl">Feitas</span></div>`;
+}
+
+function renderBenches(){
+  if (!S.ready){ $('benches').innerHTML = `<div class="empty-box" style="grid-column:1/-1">Carregando as bancadas…</div>`; return; }
+  if (!S.benches.length){
+    $('benches').innerHTML = `<div class="empty-box" style="grid-column:1/-1">Nenhuma bancada cadastrada ainda. ${S.mgr ? 'Crie as bancadas no painel do gerente, logo abaixo.' : 'O gerente cria as bancadas no painel dele.'}</div>`;
+    return;
+  }
+  const next = callable()[0];
+  const avg = avgMinutes();
+  $('benches').innerHTML = S.benches.map(b => {
+    const mine = S.me && b.artista === S.me && b.status !== 'livre';
+    let st = '', body = '', acts = [];
+    if (b.status === 'livre'){
+      st = 'Livre';
+      const restingQ = waiting().filter(t => !onBench(t.artista) && resting(t.artista));
+      const soon = restingQ.length ? Math.min(...restingQ.map(t => restUntil(t.artista))) : 0;
+      body = next ? `<div class="p-empty">Próxima da fila</div><div class="p-artist">${pad(next.num)} · ${esc(next.artista)}</div>`
+        : soon ? `<div class="p-empty">Quem está na fila está descansando. Próxima chamada às <b>${hhmm(soon)}</b>.</div>`
+        : `<div class="p-empty">Ninguém na fila. Livre há ${dur(b.desde)}.</div>`;
+      if (next) acts.push(`<button class="btn hot grow" data-act="callNext" data-b="${b.id}">Chamar ${pad(next.num)}</button>`);
+      if (S.mgr) acts.push(`<button class="btn ${next ? '' : 'pri grow'}" data-act="occupy" data-b="${b.id}">${next ? 'Ocupar direto' : 'Ocupar'}</button>`);
+      if (S.mgr) acts.push(`<button class="btn ghost sm" data-act="pause" data-b="${b.id}">Pausar</button>`);
+    } else if (b.status === 'chamado'){
+      st = 'Chamando';
+      body = `<div class="p-artist">${esc(b.artista)}</div><div class="p-client">${b.cliente ? esc(b.cliente) + ' · ' : ''}senha ${pad(b.senhaNum)}</div>
+        <div class="meter-l num"><span>Chamado às ${hhmm(b.desde)}</span><span>${dur(b.desde)}</span></div>`;
+      acts.push(`<button class="btn pri grow" data-act="start" data-b="${b.id}">Começar</button>`);
+      acts.push(`<button class="btn sm" data-act="skip" data-b="${b.id}">Pular</button>`);
+    } else if (b.status === 'ocupada'){
+      st = 'Tatuando';
+      const m = mins(b.desde);
+      const pct = avg ? Math.min(100, Math.round(m / avg * 100)) : null;
+      body = `<div class="p-artist">${esc(b.artista)}</div><div class="p-client">${esc(b.cliente || 'Cliente sem nome')}${b.obs ? ' · ' + esc(b.obs) : ''}</div>
+        ${pct != null ? `<div class="meter" role="img" aria-label="${m} de cerca de ${Math.round(avg)} minutos"><i style="width:${pct}%"></i></div>` : ''}
+        <div class="meter-l num"><span>Desde ${hhmm(b.desde)}</span><span>${dur(b.desde)}${avg ? ' de ~' + Math.round(avg) : ''}</span></div>`;
+      acts.push(`<button class="btn ${mine ? 'hot' : ''} grow" data-act="release" data-b="${b.id}">Terminei, liberar</button>`);
+    } else {
+      st = 'Pausa';
+      body = `<div class="p-empty">${esc(b.motivo || 'Limpeza ou montagem')}</div><div class="meter-l num"><span>Desde ${hhmm(b.desde)}</span><span>${dur(b.desde)}</span></div>`;
+      acts.push(`<button class="btn grow" data-act="unpause" data-b="${b.id}">Liberar bancada</button>`);
+    }
+    return `<article class="poster s-${b.status}${mine ? ' mine' : ''}">
+      <div class="p-head"><div><div class="p-num num">${two(b.num)}</div>${b.nome ? `<div class="p-name">${esc(b.nome)}</div>` : ''}</div><span class="stamp">${st}</span></div>
+      <div class="p-body">${body}</div>
+      <div class="p-acts">${acts.join('')}</div>
+    </article>`;
+  }).join('');
+}
+
+function renderQueue(){
+  const q = waiting();
+  const avg = avgMinutes();
+  const nb = Math.max(1, S.benches.filter(b => b.status !== 'pausa').length);
+  $('qinfo').textContent = q.length ? (q.length + ' esperando' + (avg ? ' · tattoo média ' + Math.round(avg) + ' min' : '') + (S.descanso ? ' · descanso ' + S.descanso + ' min' : '')) : '';
+  if (!S.ready){ $('queue').innerHTML = ''; return; }
+  if (!q.length){
+    $('queue').innerHTML = `<div class="empty-box">Fila vazia. Cada flash vendido pelo gerente gera uma senha aqui, com o nome do cliente.</div>`;
+    return;
+  }
+  const called = S.tickets.filter(t => t.status === 'chamado');
+  const first = callable()[0];
+  $('queue').innerHTML = `<div class="stubs">${q.map((t, i) => {
+    const mine = S.me && t.artista === S.me;
+    const busyAt = onBench(t.artista);
+    const rest = !busyAt && resting(t.artista);
+    const ahead = i + called.length;
+    const est = avg ? Math.round((Math.floor(ahead / nb) + 1) * avg * (ahead < nb ? 0.5 : 1)) : null;
+    const tags = [];
+    if (first === t) tags.push('<span class="tag">Próxima</span>');
+    if (busyAt) tags.push(`<span class="tag">Tatuando na ${two(busyAt.num)}</span>`);
+    if (rest) tags.push(`<span class="tag rest">Descansa até ${hhmm(restUntil(t.artista))}</span>`);
+    if (t.pulada) tags.push('<span class="tag">Pulada</span>');
+    const acts = [];
+    if (S.mgr) S.benches.filter(b => b.status === 'livre').slice(0, 4).forEach(b => acts.push(`<button class="btn sm" data-act="callTo" data-b="${b.id}" data-t="${t.id}">→ ${two(b.num)}</button>`));
+    if (S.mgr || mine) acts.push(`<button class="btn ghost sm" data-act="cancel" data-t="${t.id}">Cancelar</button>`);
+    return `<div class="stub${first === t ? ' next' : ''}${busyAt || rest ? ' wait' : ''}${mine ? ' mine' : ''}">
+      <div class="stub-n" style="grid-row:span ${acts.length ? 2 : 1}"><small>Senha</small><b class="num">${pad(t.num)}</b></div>
+      <div class="stub-b"><div class="stub-a">${esc(t.artista)}</div><div class="stub-c">${esc(t.cliente || 'Cliente sem nome')}${t.obs ? ' · ' + esc(t.obs) : ''}</div>${tags.length ? `<div class="tags">${tags.join('')}</div>` : ''}</div>
+      <div class="stub-w num"><span>${dur(t.criadaEm)}</span>${est && !busyAt && !rest ? '~' + est + ' min' : 'na fila'}</div>
+      ${acts.length ? `<div class="stub-x">${acts.join('')}</div>` : ''}
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function renderFeed(){
+  const list = S.notes.filter(n => n.tipo === 'aviso' || S.mgr || n.de === S.me).slice(0, 12);
+  $('feed').innerHTML = list.length ? `<div class="notes">${list.map(n => `<div class="note ${n.tipo === 'pedido' ? 'pedido' : ''} ${n.para && n.para === S.me ? 'para-mim' : ''}">
+    <div class="meta num">${hhmm(n.criadoEm)} · ${n.tipo === 'pedido' ? esc(n.de || 'Alguém') + ' chamou o gerente' + (n.resolvido ? ' · resolvido' : '') : (n.para ? 'Gerente → ' + esc(n.para) : 'Gerente → todos')}</div>
+    <p>${esc(n.texto)}</p></div>`).join('')}</div>` : `<div class="empty-box">Nenhum aviso ainda. Os recados do gerente aparecem aqui e no topo da tela.</div>`;
+}
+
+const STATUS = {aguardando: 'Na fila', chamado: 'Chamado', atendendo: 'Tatuando', concluido: 'Tatuado', cancelado: 'Cancelado'};
+const phoneDigits = v => { const d = String(v || '').replace(/\D/g, ''); return d.length === 10 || d.length === 11 ? '55' + d : d; };
+const phoneShow = v => { const d = String(v || '').replace(/\D/g, '').replace(/^55(?=\d{10,11}$)/, ''); return d.length === 11 ? `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}` : d.length === 10 ? `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}` : String(v || ''); };
+const igHandle = v => String(v || '').trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/^@/, '').replace(/\/.*$/, '');
+
+// O artista vê só o painel dele; o gerente escolhe de quem quer ver.
+const mineOf = () => S.mgr ? (S.view && S.artists.includes(S.view) ? S.view : (S.me && S.artists.includes(S.me) ? S.me : S.artists[0])) : S.me;
+
+function jobCard(t){
+  const b = t.bancada && S.benches.find(x => x.id === t.bancada);
+  const times = ['Vendido ' + hhmm(t.criadaEm)];
+  if (t.inicio) times.push('começou ' + hhmm(t.inicio));
+  if (t.fim && t.status === 'concluido') times.push('terminou ' + hhmm(t.fim) + (t.inicio ? ' (' + Math.round((t.fim - t.inicio) / 60000) + ' min)' : ''));
+  if (b && (t.status === 'chamado' || t.status === 'atendendo')) times.push(benchName(b));
+  if (t.status === 'aguardando'){ const pos = waiting().indexOf(t) + 1; if (pos) times.push(pos + 'º na fila'); }
+  const ig = igHandle(t.insta), tel = phoneDigits(t.contato);
+  const acts = [];
+  if (tel) acts.push(`<a class="btn sm wa" href="https://wa.me/${tel}" target="_blank" rel="noopener">WhatsApp</a>`);
+  if (ig) acts.push(`<a class="btn sm" href="https://instagram.com/${encodeURIComponent(ig)}" target="_blank" rel="noopener">@${esc(ig)}</a>`);
+  acts.push(`<button class="btn ghost sm" data-act="editJob" data-t="${t.id}">Editar</button>`);
+  return `<div class="job ${t.status === 'concluido' || t.status === 'cancelado' ? 'done' : ''}">
+    <div class="job-h"><span class="n num">${pad(t.num)}</span><span class="pill s-${t.status}">${STATUS[t.status] || t.status}</span></div>
+    <div class="job-c">${esc(t.cliente || 'Cliente sem nome')}</div>
+    ${t.obs ? `<div class="job-o">${esc(t.obs)}</div>` : ''}
+    ${tel || t.contato ? `<div class="job-t">${esc(phoneShow(t.contato))}</div>` : ''}
+    <div class="job-t num">${times.join(' · ')}</div>
+    <div class="job-x">${acts.join('')}</div>
+  </div>`;
+}
+
+function renderMine(){
+  if (document.activeElement && document.activeElement.id === 'viewSel') return;
+  if (!S.ready){ $('meu').innerHTML = ''; return; }
+  const who = mineOf();
+  $('meuTitle').textContent = who ? (S.mgr && who !== S.me ? 'Painel de ' + who : 'Meu painel') : 'Meu painel';
+  if (!who){
+    $('meuInfo').textContent = '';
+    $('meu').innerHTML = `<div class="empty-box">Escolha seu nome para ver os flashes vendidos pra você, o que já foi tatuado e o contato de cada cliente.<br><br><button class="btn hot" data-act="whoami">Escolher meu nome</button></div>`;
+    return;
+  }
+  const mine = S.tickets.filter(t => t.artista === who);
+  const by = st => mine.filter(t => st.includes(t.status));
+  const now = by(['chamado', 'atendendo']), fila = by(['aguardando']).sort((a,b) => (a.ordem||0) - (b.ordem||0));
+  const feitos = by(['concluido']).sort((a,b) => (b.fim||0) - (a.fim||0)), canc = by(['cancelado']);
+  const sold = mine.length - canc.length + S.sales.filter(v => v.artista === who && toBook(v)).length;
+  const durs = feitos.filter(t => t.inicio && t.fim).map(t => (t.fim - t.inicio) / 60000);
+  const mySales = S.sales.filter(v => v.artista === who && v.status !== 'cancelada');
+  const money_ = mySales.reduce((s, v) => s + (Number(v.valor) || 0), 0), net = round2(mySales.reduce((s, v) => s + saleArtist(v), 0));
+  $('meuInfo').textContent = sold ? sold + (sold === 1 ? ' vendido' : ' vendidos') + ' · ' + feitos.length + (feitos.length === 1 ? ' tatuado' : ' tatuados') : '';
+  const myFlashes = S.flashes.filter(f => f.artista === who);
+  const tk = v => v.senha && S.tickets.find(x => x.id === v.senha);
+  const manual = mine.filter(t => !t.venda && t.status !== 'cancelado').map(t => ({id: t.id, senha: t.id, codigo: '', flashNome: t.obs || 'Senha ' + pad(t.num), cliente: t.cliente, contato: t.contato, insta: t.insta, valor: 0, pago: true, criadaEm: t.criadaEm}));
+  const rank = v => { const t = tk(v); return t ? ({chamado: 0, atendendo: 0, aguardando: 1, concluido: 3}[t.status] ?? 4) : v.agendado ? 3 : 1; };
+  const soldList = mySales.concat(manual).sort((a, b) => rank(a) - rank(b) || b.criadaEm - a.criadaEm);
+  const soldRow = v => {
+    const t = tk(v), f = S.flashes.find(x => x.id === v.flashId), open = S.soldOpen === v.id;
+    const pill = t ? `<span class="pill s-${t.status}">${STATUS[t.status] || t.status}</span>` : `<span class="pill ${v.agendado ? 's-concluido' : 's-aguardando'}">${v.agendado ? 'Agendado' : 'Agendar'}</span>`;
+    const src = t || v, ig = igHandle(src.insta), tel = phoneDigits(src.contato);
+    const bench = t && t.bancada && S.benches.find(x => x.id === t.bancada);
+    const when = ['Vendido às ' + hhmm(v.criadaEm)];
+    if (bench && (t.status === 'chamado' || t.status === 'atendendo')) when.push(benchName(bench));
+    if (t && t.status === 'concluido' && t.fim) when.push('terminou ' + hhmm(t.fim));
+    if (t && t.status === 'aguardando'){ const n = waiting().indexOf(t) + 1; if (n) when.push(n + 'º na fila'); }
+    const acts = [];
+    if (tel) acts.push(`<a class="btn sm wa" href="https://wa.me/${tel}" target="_blank" rel="noopener">WhatsApp</a>`);
+    if (ig) acts.push(`<a class="btn sm" href="https://instagram.com/${encodeURIComponent(ig)}" target="_blank" rel="noopener">@${esc(ig)}</a>`);
+    if (toBook(v)) acts.push(`<button class="btn ghost sm" data-act="markBooked" data-v="${v.id}" data-on="${v.agendado ? '0' : '1'}">${v.agendado ? 'Desfazer' : 'Já agendei'}</button>`);
+    if (t) acts.push(`<button class="btn ghost sm" data-act="editJob" data-t="${t.id}">Editar</button>`);
+    return `<div class="sold"><button class="sold-h" data-act="soldOpen" data-v="${v.id}" aria-expanded="${open}">
+      ${flImg(f, false) || `<span class="sold-ph num">${esc(v.codigo || '–')}</span>`}
+      <span class="sold-t"><b>${esc(v.flashNome || 'Flash sem nome')}</b><span>${esc(v.cliente || 'Cliente sem nome')}</span></span>${pill}</button>
+      ${open ? `<div class="sold-b">${flImg(f)}<div class="job-t num">${when.join(' · ')}</div>
+        ${v.valor ? `<div class="job-t num">${brl(v.valor)} · fica ${brl(saleArtist(v))}${v.pago ? '' : ' · a receber'}${v.local ? ' · ' + (v.local === 'casa' ? 'na Casa Flamma' : 'no estúdio do artista') : ''}</div>` : ''}
+        ${src.contato ? `<div class="job-t">${esc(phoneShow(src.contato))}</div>` : ''}
+        ${acts.length ? `<div class="sold-x">${acts.join('')}</div>` : ''}</div>` : ''}</div>`;
+  };
+
+  let status;
+  const bench = onBench(who);
+  if (bench && bench.status === 'ocupada') status = `<div class="now"><span class="lbl">Agora</span><b>Tatuando na ${esc(benchName(bench))}</b><span>${esc(bench.cliente || '')} · desde ${hhmm(bench.desde)}</span></div>`;
+  else if (bench) status = `<div class="now"><span class="lbl">Agora</span><b>Chamado na ${esc(benchName(bench))}</b><span>${esc(bench.cliente || '')}</span></div>`;
+  else if (resting(who)) status = `<div class="now rest"><span class="lbl">Agora</span><b>Descanso até ${hhmm(restUntil(who))}</b><span>${fila.length ? 'Depois disso a senha ' + pad(fila[0].num) + ' é chamada.' : 'Nenhuma senha na fila.'}</span></div>`;
+  else if (fila.length) status = `<div class="now"><span class="lbl">Próxima</span><b>Senha ${pad(fila[0].num)} · ${esc(fila[0].cliente || 'Cliente sem nome')}</b><span>${waiting().indexOf(fila[0]) + 1}º na fila geral</span></div>`;
+  else if (noDay(who)) status = `<div class="now idle"><span class="lbl">No dia</span><b>Só vende, não tatua</b><span>Suas vendas aparecem aqui pra você agendar com o cliente.</span></div>`;
+  else status = `<div class="now idle"><span class="lbl">Agora</span><b>Livre</b><span>Nenhuma senha sua na fila.</span></div>`;
+
+  const pick = S.mgr ? `<div class="mine-pick"><label class="lbl" for="viewSel">Ver painel de</label><select id="viewSel" data-chg="viewArtist">${artistOptions(who)}</select></div>` : '';
+  const view = S.meuView === 'flashes' ? 'flashes' : 'vendidas';
+  const live = myFlashes.filter(f => f.ativo !== false && !soldOut(f)).length;
+  $('meu').innerHTML = `${pick}
+    ${status}
+    ${money_ ? `<div class="me-money"><div><span class="lbl">${S.mgr && who !== S.me ? 'Fica com ' + esc(who) : 'Fica com você'}</span><strong class="num">${brl(net)}</strong></div><small class="num">de ${brl(money_)} vendidos</small></div>` : ''}
+    <div class="seg" role="tablist"><button class="${view === 'vendidas' ? 'on' : ''}" data-act="meuView" data-v="vendidas">Vendidas (${soldList.length})</button><button class="${view === 'flashes' ? 'on' : ''}" data-act="meuView" data-v="flashes">Flashes (${myFlashes.length})</button></div>
+    ${view === 'vendidas'
+      ? (soldList.length ? `<div class="sold-list">${soldList.map(soldRow).join('')}</div>` : '<div class="empty-box">Nenhuma arte vendida ainda. Quando o gerente vender um flash seu, ele aparece aqui.</div>')
+      : (myFlashes.length ? `<p class="hint">${live} de ${myFlashes.length} disponíveis</p><div class="fls">${myFlashes.map(f => `<div class="fl ${soldOut(f) || f.ativo === false ? 'sold' : ''}"><div class="fl-h"><span class="code num">${esc(f.codigo)}</span><span class="pill ${soldOut(f) ? 's-concluido' : 's-aguardando'}">${f.ativo === false ? 'Fora de venda' : soldOut(f) ? 'Vendido' : 'Disponível'}</span></div>${flImg(f)}<div class="fl-n">${esc(f.nome || 'Flash sem nome')}</div><div class="job-t num">${f.preco ? brl(f.preco) : ''}</div></div>`).join('')}</div>` : '<div class="empty-box">Nenhum flash cadastrado ainda.</div>')}
+    ${canc.length && view === 'vendidas' ? `<details class="group"><summary>Cancelados · ${canc.length}</summary><div class="jobs">${canc.map(jobCard).join('')}</div></details>` : ''}
+    ${who === S.me && !S.owner ? '<div class="me-foot"><button class="btn ghost sm" data-act="myPin">Trocar meu PIN</button></div>' : ''}`;
+}
+
+function editSheet(id){
+  const t = S.tickets.find(x => x.id === id);
+  if (!t) return;
+  sheet(`<h4>Senha ${pad(t.num)} · ${esc(t.artista)}</h4>
+    <div class="field"><label class="lbl" for="eCli">Nome do cliente</label><input id="eCli" autocomplete="off" maxlength="60" value="${esc(t.cliente)}"></div>
+    <div class="field"><label class="lbl" for="eTel">WhatsApp</label><input id="eTel" type="tel" inputmode="tel" autocomplete="off" maxlength="20" value="${esc(t.contato)}" placeholder="(31) 99999-9999"></div>
+    <div class="field"><label class="lbl" for="eIg">Instagram</label><input id="eIg" autocomplete="off" maxlength="40" value="${esc(t.insta)}" placeholder="@cliente"></div>
+    <div class="field"><label class="lbl" for="eObs">Flash vendido</label><input id="eObs" autocomplete="off" maxlength="80" value="${esc(t.obs)}"></div>
+    <div class="row"><button class="btn hot grow" data-act="saveJob" data-t="${t.id}">Salvar</button><button class="btn ghost" data-act="close">Cancelar</button></div>`);
+}
+
+/* ---------- vendas e flashes ---------- */
+const PAY = {pix: 'Pix', credito: 'Crédito', debito: 'Débito', dinheiro: 'Dinheiro'};
+const brl = v => (Number(v) || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL', minimumFractionDigits: Number.isInteger(Number(v) || 0) ? 0 : 2});
+const money = v => { let t = String(v || '').replace(/[^\d,.]/g, ''); if (t.includes(',')) t = t.replace(/\./g, '').replace(',', '.'); const n = parseFloat(t); return isFinite(n) ? Math.round(n * 100) / 100 : 0; };
+const codeKey = c => { c = String(c || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, ''); return /^\d+$/.test(c) ? String(Number(c)) : c; };
+const flashByCode = c => { const k = codeKey(c); return k ? S.flashes.find(f => codeKey(f.codigo) === k) : null; };
+const salesOf = f => S.sales.filter(v => v.flashId === f.id && v.status !== 'cancelada');
+const soldOut = f => !f.repete && salesOf(f).length > 0;
+const nextCode = () => pad(S.flashes.reduce((m, f) => /^\d+$/.test(f.codigo) ? Math.max(m, Number(f.codigo)) : m, 0) + 1);
+const activeSales = () => S.sales.filter(v => v.status !== 'cancelada');
+const saveConfig = patch => S.db.doc('config/geral').set(Object.assign({artistas: S.artists, descanso: S.descanso}, S.cfg, patch));
+// Comissão do estúdio: padrão do dia, ou o combinado com cada artista. Na venda dá pra mudar.
+const comOf = a => typeof S.coms[a] === 'number' ? S.coms[a] : S.comPadrao;
+const round2 = n => Math.round(n * 100) / 100;
+const saleCom = v => typeof v.comissao === 'number' ? v.comissao : comOf(v.artista);
+const saleStudio = v => typeof v.estudio === 'number' ? v.estudio : round2((Number(v.valor) || 0) * saleCom(v) / 100);
+const saleArtist = v => round2((Number(v.valor) || 0) - saleStudio(v));
+const pct = n => String(n).replace('.', ',') + '%';
+
+function artistNow(name){
+  const b = onBench(name);
+  if (b) return b.status === 'ocupada' ? 'tatuando na ' + benchName(b) : 'chamado na ' + benchName(b);
+  if (resting(name)) return 'descansando até ' + hhmm(restUntil(name));
+  return 'livre';
+}
+
+function resetSale(){
+  S.sale = {flash: null, pay: '', paid: true, valTouched: false, comTouched: false};
+  ['sCode', 'sCli', 'sTel', 'sIg', 'sVal', 'sCom', 'sObs'].forEach(id => { $(id).value = ''; });
+  $('sErr').hidden = true;
+  renderSell();
+}
+
+function renderSell(){
+  $('segNova').classList.toggle('on', S.sellView === 'nova'); $('segDia').classList.toggle('on', S.sellView === 'dia');
+  $('sellNew').hidden = S.sellView !== 'nova'; $('sellDay').hidden = S.sellView !== 'dia';
+  if (S.sellView === 'dia') return renderSellDay();
+  const code = $('sCode').value.trim();
+  const f = S.sale.flash && S.flashes.find(x => x.id === S.sale.flash);
+  let html;
+  if (!code) html = `<p class="hint">Digite o código da etiqueta do flash. Ou toque em <b>Procurar</b> pra achar pelo nome ou artista.</p>`;
+  else if (!f) html = `<div class="match miss"><b>Nenhum flash com o código ${esc(code)}</b><span>Confira a etiqueta ou cadastre o flash na aba Flashes.</span></div>`;
+  else {
+    const q = waiting().filter(t => t.artista === f.artista).length;
+    const out = soldOut(f), off = f.ativo === false, later = noDay(f.artista);
+    const place = later ? `<div class="job-t"><b>Não tatua no dia:</b> a venda fica pra agendar, sem senha.</div><div class="chips">${[['casa', 'Na Casa Flamma · 30%'], ['estudio', 'No estúdio do artista · 20%']].map(([k, t]) => `<button class="${S.sale.local === k ? 'on' : ''}" data-act="saleLocal" data-v="${k}">${t}</button>`).join('')}</div>` : '';
+    html = `<div class="match ${out || off ? 'bad' : ''}">
+      <div class="match-h"><span class="code num">${esc(f.codigo)}</span><span class="pill ${out || off ? 's-cancelado' : 's-aguardando'}">${off ? 'Fora de venda' : out ? 'Já vendido' : f.repete ? 'Disponível · repete' : 'Disponível'}</span></div>
+      ${flImg(f)}<div class="match-a">${esc(f.artista)}</div>
+      <div class="match-n">${esc(f.nome || 'Flash sem nome')}${f.tamanho ? ' · ' + esc(f.tamanho) : ''}</div>
+      <div class="match-p num">${f.preco ? brl(f.preco) : 'Sem preço cadastrado'}</div>
+      ${later ? place : `<div class="job-t">${esc(f.artista)} está ${esc(artistNow(f.artista))} · ${q ? q + (q === 1 ? ' senha' : ' senhas') + ' na fila' : 'ninguém na fila'}</div>`}
+      ${out ? `<div class="job-t">Vendido pra ${esc(salesOf(f)[0].cliente || 'cliente')} às ${hhmm(salesOf(f)[0].criadaEm)}.</div>` : ''}
+    </div>`;
+  }
+  if ($('sMatch').dataset.h !== html){ $('sMatch').innerHTML = html; $('sMatch').dataset.h = html; }
+  document.querySelectorAll('#sPay button').forEach(b => b.classList.toggle('on', b.dataset.v === S.sale.pay));
+  document.querySelectorAll('#sPaid button').forEach(b => b.classList.toggle('on', (b.dataset.v === '1') === S.sale.paid));
+  const val = money($('sVal').value), com = $('sCom').value.trim() === '' ? null : money($('sCom').value);
+  const sp = !f || com == null ? '' : com > 100 ? '<span class="err">A comissão vai de 0 a 100%.</span>'
+    : `<div><span class="lbl">Estúdio · ${pct(com)}</span><b class="num">${brl(round2(val * com / 100))}</b></div><div><span class="lbl">${esc(f.artista)}</span><b class="num">${brl(round2(val - val * com / 100))}</b></div>${com !== comOf(f.artista) ? `<small>Combinado com ${esc(f.artista)}: ${pct(comOf(f.artista))}</small>` : ''}`;
+  if ($('sSplit').dataset.h !== sp){ $('sSplit').innerHTML = sp; $('sSplit').dataset.h = sp; }
+  $('sGo').textContent = val ? 'Finalizar venda · ' + brl(val) : 'Finalizar venda';
+}
+
+function renderSellDay(){
+  const list = activeSales().sort((a, b) => b.criadaEm - a.criadaEm), canc = S.sales.filter(v => v.status === 'cancelada');
+  const total = list.reduce((s, v) => s + (Number(v.valor) || 0), 0);
+  const studio = round2(list.reduce((s, v) => s + saleStudio(v), 0));
+  const open = list.filter(v => !v.pago), openTot = open.reduce((s, v) => s + (Number(v.valor) || 0), 0);
+  const byPay = Object.keys(PAY).map(k => { const l = list.filter(v => v.pagamento === k); return {k, n: l.length, t: l.reduce((s, v) => s + (Number(v.valor) || 0), 0)}; }).filter(x => x.n);
+  const arts = {};
+  list.forEach(v => { const a = arts[v.artista] = arts[v.artista] || {n: 0, t: 0, open: 0, st: 0}; a.n++; a.t += Number(v.valor) || 0; a.st += saleStudio(v); if (!v.pago) a.open += Number(v.valor) || 0; });
+  const artRows = Object.entries(arts).sort((a, b) => b[1].t - a[1].t);
+  const row = v => {
+    const t = v.senha && S.tickets.find(x => x.id === v.senha);
+    return `<div class="sale-row ${v.status === 'cancelada' ? 'off' : ''}">
+      <div class="sr-n num">${pad(v.num)}<small>${hhmm(v.criadaEm)}</small></div>
+      <div class="sr-b"><b>${esc(v.cliente || 'Cliente sem nome')}</b><span>${esc(v.codigo)} · ${esc(v.flashNome || 'flash')} · ${esc(v.artista)}</span>
+        <span class="tags">${v.status === 'cancelada' ? '<span class="tag">Cancelada</span>' : `<span class="tag">${PAY[v.pagamento] || 'Sem forma'}</span>${v.pago ? '' : '<span class="tag due">A receber</span>'}${t ? `<span class="tag">Senha ${pad(t.num)} · ${STATUS[t.status] || ''}</span>` : ''}${toBook(v) ? `<span class="tag">${v.agendado ? 'Agendado' : 'Agendar'}</span>` : ''}`}</span></div>
+      <div class="sr-v num">${brl(v.valor)}<small>estúdio ${pct(saleCom(v))}</small></div>
+      ${v.status === 'cancelada' ? '' : `<div class="sr-x">${v.pago ? '' : `<button class="btn sm" data-act="markPaid" data-v="${v.id}">Marcar pago</button>`}<button class="btn ghost sm" data-act="cancelSale" data-v="${v.id}">Cancelar</button></div>`}
+    </div>`;
+  };
+  $('sellDay').innerHTML = `
+    <div class="board cash">
+      <div class="busy"><strong class="num">${list.length}</strong><span class="lbl">Vendas</span></div>
+      <div class="free"><strong class="num">${brl(total)}</strong><span class="lbl">Total</span></div>
+      <div class="q"><strong class="num">${brl(openTot)}</strong><span class="lbl">A receber</span></div>
+      <div class="done"><strong class="num">${brl(studio)}</strong><span class="lbl">Estúdio</span></div>
+    </div>
+    ${byPay.length ? `<div class="group"><h3>Por forma de pagamento</h3><div class="pays">${byPay.map(x => `<div><span class="lbl">${PAY[x.k]}</span><b class="num">${brl(x.t)}</b><small>${x.n} venda${x.n === 1 ? '' : 's'}</small></div>`).join('')}</div></div>` : ''}
+    <div class="group"><h3>Por artista<button class="btn ghost sm" data-act="editComs">Comissões</button></h3>
+      ${artRows.length ? `<div class="arts">${artRows.map(([a, x]) => `<div><span>${esc(a)}</span><span class="num">${x.n}×</span><b class="num">${brl(x.t)}</b><em class="num">Estúdio ${brl(round2(x.st))} · artista ${brl(round2(x.t - x.st))}</em>${x.open ? `<small class="num">${brl(x.open)} a receber</small>` : '<small></small>'}</div>`).join('')}</div>` : '<p class="hint">Nenhuma venda ainda.</p>'}</div>
+    <div class="group"><h3>Vendas · mais recentes primeiro</h3>
+      ${list.length ? `<div class="sales">${list.map(row).join('')}</div>` : '<div class="empty-box">Nenhuma venda ainda. Use <b>Nova venda</b> pra registrar a primeira.</div>'}</div>
+    ${canc.length ? `<details class="group"><summary>Canceladas · ${canc.length}</summary><div class="sales">${canc.map(row).join('')}</div></details>` : ''}`;
+}
+
+function daySheet(){
+  const on = S.cfg.soAgenda || [];
+  sheet(`<h4>Quem não tatua no dia?</h4><p class="hint">Marque quem só vende no dia e tatua depois. A venda dessas pessoas não gera senha nem chama bancada: fica no painel delas, pra agendar.</p>
+    <div class="coms">${S.artists.map(a => `<label style="grid-template-columns:1fr 26px"><span>${esc(a)}</span><input type="checkbox" data-day="${esc(a)}" style="width:22px;height:22px;accent-color:var(--pink)" ${on.includes(a) ? 'checked' : ''}></label>`).join('')}</div>
+    <div class="row"><button class="btn hot grow" data-act="saveDay">Salvar</button><button class="btn ghost" data-act="close">Cancelar</button></div>`);
+}
+
+function comsSheet(){
+  const v = n => String(n).replace('.', ',');
+  sheet(`<h4>Comissão do estúdio</h4>
+    <p class="hint">Quanto de cada venda fica com o estúdio. Deixe em branco quem segue o padrão. Na hora da venda o valor vem preenchido e dá pra mudar.</p>
+    <div class="field"><label class="lbl" for="cmP">Padrão para todos (%)</label><input id="cmP" inputmode="decimal" maxlength="5" value="${v(S.comPadrao)}"></div>
+    <div class="coms">${S.artists.map(a => `<label><span>${esc(a)}</span><input data-cm="${esc(a)}" inputmode="decimal" maxlength="5" placeholder="${v(S.comPadrao)}" value="${typeof S.coms[a] === 'number' ? v(S.coms[a]) : ''}"><i>%</i></label>`).join('')}</div>
+    <div class="row"><button class="btn hot grow" data-act="saveComs">Salvar comissões</button><button class="btn ghost" data-act="close">Cancelar</button></div>`);
+}
+
+function pickList(q){
+  const k = String(q || '').trim().toLowerCase();
+  const list = S.flashes.filter(f => f.ativo !== false && !soldOut(f) && (!k || [f.codigo, f.nome, f.artista].some(x => String(x || '').toLowerCase().includes(k))));
+  if (!list.length) return '<p class="hint">Nenhum flash disponível com essa busca.</p>';
+  return list.slice(0, 60).map(f => `<button class="pick" data-act="choose" data-f="${f.id}">${flImg(f, false) || `<span class="code num">${esc(f.codigo)}</span>`}<span class="pk-b"><b>${f.foto ? esc(f.codigo) + ' · ' : ''}${esc(f.nome || 'Flash sem nome')}</b><span>${esc(f.artista)}</span></span><span class="num">${f.preco ? brl(f.preco) : ''}</span></button>`).join('');
+}
+function pickSheet(){
+  sheet(`<h4>Procurar flash</h4>
+    <div class="field"><input id="pickQ" data-in="pickSearch" autocomplete="off" placeholder="Nome, artista ou código" aria-label="Buscar flash"></div>
+    <div class="picks" id="pickList">${pickList('')}</div>
+    <div class="row"><button class="btn ghost grow" data-act="close">Fechar</button></div>`);
+}
+
+async function finishSale(){
+  const err = $('sErr'); const fail = m => { err.textContent = m; err.hidden = false; };
+  const f = S.sale.flash && S.flashes.find(x => x.id === S.sale.flash);
+  const cliente = $('sCli').value.trim(), contato = $('sTel').value.trim(), insta = igHandle($('sIg').value), obs = $('sObs').value.trim();
+  const valor = money($('sVal').value);
+  const comissao = $('sCom').value.trim() === '' ? (f ? comOf(f.artista) : 0) : money($('sCom').value);
+  if (comissao > 100) return fail('A comissão do estúdio vai de 0 a 100%.');
+  if (!f) return fail('Digite um código de flash cadastrado.');
+  if (f.ativo === false) return fail('Esse flash está fora de venda.');
+  if (soldOut(f)) return fail('Esse flash já foi vendido.');
+  if (!cliente) return fail('Coloque o nome do cliente: é ele que aparece na senha.');
+  if (!S.sale.pay) return fail('Escolha a forma de pagamento.');
+  err.hidden = true;
+  return guard(async () => {
+    // Trava o flash enquanto confere se ninguém vendeu ele agora mesmo em outro celular.
+    const fref = S.db.doc('flashes/' + f.id);
+    let got = false;
+    for (let i = 0; i < 10 && !got; i++){ got = (await fref.acquire({holder: TAB, ttlMs: 4000})).acquired; if (!got) await sleep(300); }
+    if (!got) throw new Error('Outro celular está vendendo esse flash agora. Tente de novo.');
+    await sleep(600); // dá tempo de chegar uma venda feita em outro celular segundos antes
+    if (soldOut(f)) throw new Error('Esse flash acabou de ser vendido em outro celular.');
+    const later = noDay(f.artista);
+    const [num, senhaNum] = [await nextNumber('vendas'), later ? 0 : await nextNumber('senhas')];
+    const now = Date.now();
+    const vref = S.db.collection('vendas').doc(), tref = later ? null : S.db.collection('senhas').doc();
+    const flashTxt = (f.nome || 'flash') + ' (' + f.codigo + ')' + (obs ? ' · ' + obs : '');
+    if (tref) await tref.set({num: senhaNum, artista: f.artista, cliente, obs: flashTxt, contato, insta, status: 'aguardando', ordem: now, criadaEm: now, criadaPor: S.me || '', venda: vref.id, flash: f.codigo});
+    await vref.set({num, flashId: f.id, codigo: f.codigo, flashNome: f.nome || '', artista: f.artista, preco: f.preco || 0, valor, comissao, estudio: round2(valor * comissao / 100), repasse: round2(valor - valor * comissao / 100), pagamento: S.sale.pay, pago: S.sale.paid,
+      cliente, contato, insta, obs, criadaEm: now, vendedor: S.me || 'Gerente', senha: tref ? tref.id : '', senhaNum, status: 'ativa', local: later ? S.sale.local || '' : '', agendado: false});
+    receiptSheet({num, senhaNum, f, cliente, contato, valor, comissao, pay: S.sale.pay, paid: S.sale.paid, later});
+    resetSale();
+    if (later) return;
+    await sleep(400);
+    await fillFreeBenches();
+  });
+}
+
+function receiptSheet(r){
+  const ahead = waiting().filter(t => t.num < r.senhaNum).length;
+  const tel = phoneDigits(r.contato);
+  const msg = r.later ? `Oi, ${r.cliente.split(' ')[0]}! Seu flash ${r.f.codigo} da Rastro, com ${r.f.artista}, está garantido. Em breve ${r.f.artista} te chama pra combinar o dia da tattoo.`
+    : `Oi, ${r.cliente.split(' ')[0]}! Sua senha do Flash Day Rastro é a ${pad(r.senhaNum)}, com ${r.f.artista} (flash ${r.f.codigo}). A gente te chama quando a bancada estiver pronta.`;
+  sheet(`<h4>Venda ${pad(r.num)} registrada</h4>
+    <div class="stub printed">
+      <div class="stub-n">${r.later ? '<small>Agendar</small><b class="num">↗</b>' : `<small>Senha</small><b class="num">${pad(r.senhaNum)}</b>`}</div>
+      <div class="stub-b"><div class="stub-a">${esc(r.f.artista)}</div><div class="stub-c">${esc(r.cliente)} · ${esc(r.f.nome || 'flash')} (${esc(r.f.codigo)})</div><div class="stub-c num">${brl(r.valor)} · ${PAY[r.pay]}${r.paid ? '' : ' · a receber'}</div><div class="stub-c num">Estúdio ${pct(r.comissao)} = ${brl(round2(r.valor * r.comissao / 100))} · artista ${brl(round2(r.valor - r.valor * r.comissao / 100))}</div></div>
+      <div></div>
+    </div>
+    <p class="hint">${r.later ? esc(r.f.artista) + ' não tatua no dia. A venda foi pro Meu painel do artista, pra agendar com o cliente.' : (ahead ? ahead + (ahead === 1 ? ' senha na frente.' : ' senhas na frente.') : 'É a primeira da fila.') + ' ' + esc(r.f.artista) + ' recebe o aviso no celular quando a bancada estiver pronta.'}</p>
+    <div class="row">${tel ? `<a class="btn wa grow" href="https://wa.me/${tel}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">${r.later ? 'Avisar no WhatsApp' : 'Mandar senha no WhatsApp'}</a>` : ''}<button class="btn hot grow" data-act="newSale">Nova venda</button></div>`);
+}
+
+/* ---------- fotos dos flashes ---------- */
+const flImg = (f, zoom = true) => f && f.foto ? `<img class="${zoom ? 'fl-img' : 'fl-tiny'}" src="${esc(f.foto)}" alt="${esc(f.nome || 'Flash')}" loading="lazy"${zoom ? ` data-act="zoom" data-src="${esc(f.foto)}"` : ''}>` : '';
+function flPic(){
+  if (S.flUp) return '<p class="hint">Enviando a foto…</p>';
+  if (!S.assets) return S.flPhoto ? flImg({foto: S.flPhoto}) : '<p class="hint">Pra colocar foto, é preciso ter acesso de edição.</p>';
+  return `${S.flPhoto ? flImg({foto: S.flPhoto}) : ''}<div class="row"><label class="btn">${S.flPhoto ? 'Trocar foto' : 'Tirar ou escolher foto'}<input type="file" accept="image/*" data-chg="flFile" hidden></label>${S.flPhoto ? '<button class="btn ghost" data-act="flNoPhoto">Remover</button>' : ''}</div>`;
+}
+const flPicDraw = () => { const b = $('flPic'); if (b) b.innerHTML = flPic(); };
+// Reduz a foto antes de enviar: sobe rápido e gasta pouca internet no dia da feira.
+function shrink(file, max = 640){
+  return new Promise(res => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onerror = () => { URL.revokeObjectURL(url); res(file); };
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      c.toBlob(b => res(b || file), 'image/jpeg', .72);
+    };
+    img.src = url;
+  });
+}
+
+function renderFlashes(){
+  const sel = $('flArt');
+  const opts = '<option value="">Todos os artistas</option>' + S.artists.map(a => `<option ${a === S.flArt ? 'selected' : ''}>${esc(a)}</option>`).join('');
+  if (sel.dataset.h !== opts && document.activeElement !== sel){ sel.innerHTML = opts; sel.dataset.h = opts; }
+  const k = S.flQ.trim().toLowerCase();
+  const list = S.flashes.filter(f => (!S.flArt || f.artista === S.flArt) && (!k || [f.codigo, f.nome].some(x => String(x || '').toLowerCase().includes(k))));
+  const avail = S.flashes.filter(f => f.ativo !== false && !soldOut(f)).length;
+  $('flInfo').textContent = S.flashes.length ? S.flashes.length + ' cadastrados · ' + avail + ' disponíveis' : '';
+  if (!S.flashes.length){ $('flList').innerHTML = `<div class="empty-box">Nenhum flash cadastrado. Toque em <b>+ Cadastrar</b> e registre cada flash com o código da etiqueta, o artista e o preço.</div>`; return; }
+  if (!list.length){ $('flList').innerHTML = `<div class="empty-box">Nenhum flash com esse filtro.</div>`; return; }
+  const groups = {};
+  list.forEach(f => (groups[f.artista] = groups[f.artista] || []).push(f));
+  const card = f => {
+    const n = salesOf(f).length, out = soldOut(f), off = f.ativo === false;
+    return `<div class="fl ${out || off ? 'sold' : ''}">
+      <div class="fl-h"><span class="code num">${esc(f.codigo)}</span><span class="pill ${off ? 's-cancelado' : out ? 's-concluido' : 's-aguardando'}">${off ? 'Fora de venda' : out ? 'Vendido' : n ? n + ' vendido' + (n === 1 ? '' : 's') : 'Disponível'}</span></div>
+      ${flImg(f)}<div class="fl-n">${esc(f.nome || 'Flash sem nome')}</div>
+      <div class="job-t num">${f.preco ? brl(f.preco) : 'Sem preço'}${f.tamanho ? ' · ' + esc(f.tamanho) : ''}${f.repete ? ' · repete' : ''}</div>
+      <div class="job-x">${!out && !off ? `<button class="btn hot sm" data-act="sellThis" data-f="${f.id}">Vender</button>` : ''}<button class="btn ghost sm" data-act="editFlash" data-f="${f.id}">Editar</button></div>
+    </div>`;
+  };
+  const html = Object.keys(groups).sort((a, b) => a.localeCompare(b)).map(a => `<div class="group"><h3>${esc(a)} · ${groups[a].length}<button class="btn ghost sm" data-act="newFlash" data-a="${esc(a)}">+ flash</button></h3><div class="fls">${groups[a].map(card).join('')}</div></div>`).join('');
+  if ($('flList').dataset.h !== html){ $('flList').innerHTML = html; $('flList').dataset.h = html; }
+}
+
+function flashSheet(id, artist){
+  const f = id ? S.flashes.find(x => x.id === id) : null;
+  const sold = f ? salesOf(f).length : 0;
+  S.flPhoto = f ? f.foto || '' : ''; S.flUp = false;
+  sheet(`<h4>${f ? 'Editar flash ' + esc(f.codigo) : 'Cadastrar flash'}</h4>
+    <div class="field"><label class="lbl" for="flA">Artista</label><select id="flA"><option value="" disabled ${(f ? f.artista : artist) ? '' : 'selected'}>Escolha</option>${artistOptions(f ? f.artista : artist)}</select></div>
+    <div class="two">
+      <div class="field"><label class="lbl" for="flC">Código da etiqueta</label><input id="flC" inputmode="numeric" autocomplete="off" maxlength="8" value="${esc(f ? f.codigo : nextCode())}" ${sold ? 'disabled' : ''}></div>
+      <div class="field"><label class="lbl" for="flP">Preço (R$)</label><input id="flP" inputmode="decimal" autocomplete="off" maxlength="10" value="${f && f.preco ? String(f.preco).replace('.', ',') : ''}" placeholder="200"></div>
+    </div>
+    <div class="field"><label class="lbl" for="flN">Nome ou descrição</label><input id="flN" autocomplete="off" maxlength="60" value="${esc(f ? f.nome : '')}" placeholder="Ex.: corvo com lua"></div>
+    <div class="field"><span class="lbl">Foto do flash <span style="text-transform:none;letter-spacing:0">(opcional)</span></span><div class="fl-pic" id="flPic">${flPic()}</div></div>
+    <div class="field"><label class="lbl" for="flT">Tamanho <span style="text-transform:none;letter-spacing:0">(opcional)</span></label><input id="flT" autocomplete="off" maxlength="30" value="${esc(f ? f.tamanho : '')}" placeholder="Ex.: 10 cm"></div>
+    <label class="check"><input type="checkbox" id="flR" ${f && f.repete ? 'checked' : ''}> Pode ser vendido mais de uma vez</label>
+    <p class="hint">A comissão do estúdio vem do artista (padrão ${pct(S.comPadrao)}). Ajuste em <b>Comissões</b> no painel do gerente.</p>
+    ${f ? `<label class="check"><input type="checkbox" id="flOff" ${f.ativo === false ? 'checked' : ''}> Tirar de venda</label>` : ''}
+    ${sold ? `<p class="hint">Já tem ${sold} venda${sold === 1 ? '' : 's'}: o código não pode mudar.</p>` : ''}
+    <p class="err" id="flErr" hidden></p>
+    <div class="row">
+      <button class="btn hot grow" data-act="saveFlash" data-f="${f ? f.id : ''}">Salvar</button>
+      ${f ? '' : '<button class="btn grow" data-act="saveFlash" data-more="1">Salvar e cadastrar outro</button>'}
+      ${f && !sold ? `<button class="btn ghost" data-act="deleteFlash" data-f="${f.id}">Excluir</button>` : ''}
+      <button class="btn ghost" data-act="close">Cancelar</button>
+    </div>`);
+  if (!f && artist) $('flC').focus();
+}
+
+function saveFlash(id, more){
+  const err = $('flErr'); const fail = m => { err.textContent = m; err.hidden = false; };
+  const old = id ? S.flashes.find(x => x.id === id) : null;
+  const artista = $('flA').value, codigo = $('flC').value.trim().toUpperCase(), nome = $('flN').value.trim(), tamanho = $('flT').value.trim();
+  const preco = money($('flP').value), repete = $('flR').checked, ativo = $('flOff') ? !$('flOff').checked : true;
+  if (S.flUp) return fail('Espere a foto terminar de enviar.');
+  if (!artista) return fail('Escolha o artista.');
+  if (!codeKey(codigo)) return fail('Coloque o código da etiqueta (só letras e números).');
+  const clash = S.flashes.find(x => codeKey(x.codigo) === codeKey(codigo) && x.id !== id);
+  if (clash) return fail('O código ' + codigo + ' já é do flash "' + (clash.nome || 'sem nome') + '" de ' + clash.artista + '.');
+  const data = {codigo, artista, nome, preco, tamanho, repete, ativo, foto: S.flPhoto || ''};
+  return guard(async () => {
+    const newId = 'f' + codeKey(codigo);
+    if (old && old.id === newId) await S.db.doc('flashes/' + id).update(data);
+    else {
+      const ref = S.db.doc('flashes/' + newId);
+      if ((await ref.get()).exists) throw new Error('O código ' + codigo + ' acabou de ser cadastrado em outro celular.');
+      await ref.set(Object.assign({criadoEm: old ? old.criadoEm || Date.now() : Date.now()}, data));
+      if (old) await S.db.doc('flashes/' + old.id).delete();
+    }
+    toast('Flash ' + codigo + ' salvo.');
+    if (more){
+      flashSheet(null, artista);
+      if (/^\d+$/.test(codeKey(codigo))) $('flC').value = pad(Math.max(Number(codeKey(codigo)) + 1, Number(nextCode())));
+      $('flN').focus();
+    }
+    else closeSheet();
+  });
+}
+
+function renderMgr(){
+  if ($('mgr').contains(document.activeElement)) return; // não apaga o que o gerente está digitando
+  const opts = ['<option value="">Todos os tatuadores</option>'].concat(S.artists.map(a => `<option>${esc(a)}</option>`)).join('');
+  const n = S.benches.length;
+  $('mgr').innerHTML = `
+    <div class="field"><label class="lbl" for="avTxt">Mandar aviso</label>
+      <input id="avTxt" placeholder="Ex.: Crow, seu cliente chegou na entrada" maxlength="200"></div>
+    <div class="row">
+      <select id="avPara" style="flex:1;min-width:180px">${opts}</select>
+      <button class="btn hot" data-act="sendNote">Enviar aviso</button>
+    </div>
+    <div class="row"><label class="lbl" for="restSel" style="flex:1">Descanso entre tattoos do mesmo artista</label>
+      <select id="restSel" data-chg="setRest">${[0,5,10,15,20,30,45].map(m => `<option value="${m}" ${m === S.descanso ? 'selected' : ''}>${m ? m + ' min' : 'Sem descanso'}</option>`).join('')}</select>
+    </div>
+    <div class="row"><span class="lbl" style="flex:1">${n} bancada${n === 1 ? '' : 's'} cadastrada${n === 1 ? '' : 's'}</span>
+      <button class="btn sm" data-act="addBench">+ Bancada</button>
+      <button class="btn sm" data-act="removeBench" ${n ? '' : 'disabled'}>− Última</button>
+      ${n ? '' : '<button class="btn sm hot" data-act="createBenches">Criar 8 bancadas</button>'}
+    </div>
+    <div class="row">
+      <button class="btn sm" data-act="editArtists">Tatuadores (${S.artists.length})</button>
+      <button class="btn sm" data-act="editDay">Quem não tatua no dia (${(S.cfg.soAgenda || []).length})</button>
+      <button class="btn sm" data-act="editComs">Comissões (padrão ${pct(S.comPadrao)})</button>
+      <button class="btn sm" data-act="renameBench">Nomear bancada</button>
+      ${S.me === 'Diego' ? '<button class="btn sm" data-act="setArtPins">PIN de alguém</button>' : ''}<button class="btn sm" data-act="myPin">Trocar meu PIN</button>
+      <button class="btn sm" data-act="resetDay">Zerar o dia</button>
+    </div>`;
+}
+
+/* ---------- folhas ---------- */
+function sheet(html){
+  $('sheetRoot').innerHTML = `<div class="sheet-bg" data-act="closeBg"><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`;
+  const first = $('sheetRoot').querySelector('input,select,textarea');
+  if (first) first.focus();
+}
+const closeSheet = () => { $('sheetRoot').innerHTML = ''; };
+function toast(msg){
+  $('toastRoot').innerHTML = `<div class="toast" role="status">${esc(msg)}</div>`;
+  clearTimeout(toast.t); toast.t = setTimeout(() => $('toastRoot').innerHTML = '', 2600);
+}
+const artistOptions = sel => S.artists.map(a => `<option ${a === sel ? 'selected' : ''}>${esc(a)}</option>`).join('');
+
+const norm = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+const profiles = () => gerentes().concat(S.artists);
+const nameHits = q => { const k = norm(q); return k ? profiles().filter(n => norm(n).startsWith(k) || norm(n).split(/\s+/).some(w => w.startsWith(k))) : []; };
+const closeLogin = () => { $('loginRoot').innerHTML = ''; };
+function whoSheet(){
+  $('loginRoot').innerHTML = `<div class="login">
+    <div class="login-logo"><img src="data:image/png;base64,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" alt="Feira Rastro"><span>Flash Day · 07.11</span></div>
+    <div class="login-box">
+      <div class="field"><label class="lbl" for="lgName">Seu nome</label><input id="lgName" data-in="lgName" autocomplete="off" autocapitalize="words" maxlength="40"></div>
+      <div class="login-sug" id="lgSug"></div>
+      <div class="field" id="lgPinW" ${S.owner ? 'hidden' : ''}><label class="lbl" for="lgPin">PIN</label><input id="lgPin" type="password" inputmode="numeric" autocomplete="off" maxlength="6"></div>
+      <p class="err" id="lgErr" hidden></p>
+      <button class="btn hot" data-act="login">Entrar</button>
+      ${S.me ? '<button class="btn ghost" data-act="lgClose">Cancelar</button>' : ''}
+      <p class="hint">Primeiro acesso? Use o PIN que você recebeu.</p>
+    </div>
+  </div>`;
+}
+async function doLogin(){
+  const err = $('lgErr'); const fail = m => { err.textContent = m; err.hidden = false; };
+  if (!S.ready) return fail('Conectando… tente de novo em instantes.');
+  const typed = $('lgName').value, exact = profiles().filter(n => norm(n) === norm(typed));
+  const hits = exact.length ? exact : nameHits(typed);
+  if (!hits.length) return fail('Nome não encontrado.');
+  if (hits.length > 1) return fail('Toque no seu nome na lista.');
+  const n = hits[0];
+  if (S.owner){ closeLogin(); setMe(n, ''); return; }
+  const left = Math.ceil((S.pinWait - Date.now()) / 1000);
+  if (left > 0) return fail('Muitas tentativas. Espere ' + left + ' s.');
+  if (!(S.cfg.pinsArtistas || {})[n]) return fail('Seu PIN ainda não foi criado. Peça ao gerente.');
+  const h = await artHash(n, $('lgPin').value.trim());
+  if (h !== S.cfg.pinsArtistas[n]){
+    $('lgPin').value = ''; $('lgPin').focus();
+    if (++S.pinFail >= 5){ S.pinFail = 0; S.pinWait = Date.now() + 30000; return fail('Muitas tentativas. Espere 30 s.'); }
+    return fail('PIN errado.');
+  }
+  S.pinFail = 0; closeLogin();
+  if ((S.cfg.pinProprio || {})[n]) setMe(n, h); else myPinSheet(n, h, true);
+}
+
+function ticketSheet(benchId){
+  const b = benchId ? S.benches.find(x => x.id === benchId) : null;
+  const def = !S.mgr && S.me && S.artists.includes(S.me) ? S.me : '';
+  sheet(`<h4>${b ? 'Ocupar a ' + esc(benchName(b)) : 'Vender flash'}</h4>
+    <p class="hint">${b ? 'O tempo começa a contar agora.' : 'Gera a senha do cliente no fim da fila. Se tiver bancada livre, o tatuador é chamado na hora.'}</p>
+    <div class="field"><label class="lbl" for="fArt">Tatuador</label>
+      <select id="fArt"><option value="" ${def ? '' : 'selected'} disabled>Escolha</option>${artistOptions(def)}</select></div>
+    <div class="field"><label class="lbl" for="fCli">Nome do cliente</label><input id="fCli" autocomplete="off" maxlength="60" placeholder="Ex.: Ana Paula"></div>
+    <div class="field"><label class="lbl" for="fTel">WhatsApp do cliente <span style="text-transform:none;letter-spacing:0">(opcional)</span></label><input id="fTel" type="tel" inputmode="tel" autocomplete="off" maxlength="20" placeholder="(31) 99999-9999"></div>
+    <div class="field"><label class="lbl" for="fIg">Instagram <span style="text-transform:none;letter-spacing:0">(opcional)</span></label><input id="fIg" autocomplete="off" maxlength="40" placeholder="@cliente"></div>
+    <div class="field"><label class="lbl" for="fObs">Flash vendido <span style="text-transform:none;letter-spacing:0">(opcional)</span></label><input id="fObs" autocomplete="off" maxlength="80" placeholder="Ex.: flash do gato, antebraço"></div>
+    <p class="err" id="fErr" hidden></p>
+    <div class="row"><button class="btn hot grow" data-act="${b ? 'confirmOccupy' : 'confirmTicket'}" data-b="${b ? b.id : ''}">${b ? 'Ocupar bancada' : 'Gerar senha'}</button><button class="btn ghost" data-act="close">Cancelar</button></div>`);
+}
+
+function printedSheet(num, artista, cliente, obs){
+  const ahead = waiting().filter(t => t.num < num).length;
+  sheet(`<h4>Senha gerada</h4>
+    <div class="stub printed">
+      <div class="stub-n"><small>Senha</small><b class="num">${pad(num)}</b></div>
+      <div class="stub-b"><div class="stub-a">${esc(artista)}</div><div class="stub-c">${esc(cliente || 'Cliente sem nome')}${obs ? ' · ' + esc(obs) : ''}</div></div>
+      <div></div>
+    </div>
+    <p class="hint">${ahead ? ahead + (ahead === 1 ? ' senha na frente.' : ' senhas na frente.') : 'É a primeira da fila.'} ${esc(artista)} recebe o aviso no celular quando a bancada estiver pronta.</p>
+    <div class="row"><button class="btn pri grow" data-act="close">Fechar</button></div>`);
+}
+
+function askSheet(){
+  sheet(`<h4>Chamar gerente</h4>
+    <p class="hint">O gerente recebe o recado no celular dele${S.me ? ', com seu nome' : ''}.</p>
+    <div class="row">${['Preciso de material', 'Meu cliente chegou', 'Problema na bancada', 'Pode vir aqui?'].map(t => `<button class="btn sm" data-act="quickAsk" data-t="${t}">${t}</button>`).join('')}</div>
+    <div class="field"><label class="lbl" for="askTxt">Ou escreva</label><input id="askTxt" maxlength="160" placeholder="Ex.: acabou o papel toalha na 04"></div>
+    <div class="row"><button class="btn hot grow" data-act="sendAsk">Enviar</button><button class="btn ghost" data-act="close">Cancelar</button></div>`);
+}
+
+/* ---------- perfis e PINs ---------- */
+// Gerente é um perfil próprio: quem entra como artista nunca vê vendas nem caixa.
+async function sha(t){
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t));
+  return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+
+/* ---------- PIN de cada artista ---------- */
+const artHash = (n, p) => sha('rastro-artista:' + n + ':' + p);
+function setMe(n, h){
+  S.me = n || null; S.mgr = isMgr(S.me); store.set('eu', S.me); store.set('eu-pin', h || null);
+  closeSheet(); closeLogin(); render(); tutAuto();
+  if (S.me && !S.tour) toast('Pronto, ' + S.me + '. Você será avisado aqui.');
+}
+// Lê o documento na hora, com trava: dois artistas trocando juntos não apagam a troca um do outro.
+async function patchPin(n, h, own){
+  const ref = S.db.doc('config/geral');
+  let got = false;
+  for (let i = 0; i < 10 && !got; i++){ got = (await ref.acquire({holder: TAB, ttlMs: 2000})).acquired; if (!got) await sleep(300); }
+  if (!got) throw new Error('Tente de novo em instantes.');
+  const d = (await ref.get()).data();
+  await ref.set(Object.assign({}, d, {pinsArtistas: Object.assign({}, d.pinsArtistas, {[n]: h}), pinProprio: Object.assign({}, d.pinProprio, {[n]: own})}));
+}
+function myPinSheet(n, h, first){
+  sheet(`<h4>${first ? 'Crie o seu PIN' : 'Trocar meu PIN'}</h4><p class="hint">Escolha um PIN só seu, de 4 a 6 números. Fácil de lembrar, mas que ninguém adivinhe.</p>
+    <div class="field"><label class="lbl" for="mpA">Novo PIN</label><input id="mpA" type="password" inputmode="numeric" autocomplete="new-password" maxlength="6"></div>
+    <div class="field"><label class="lbl" for="mpB">Repita o PIN</label><input id="mpB" type="password" inputmode="numeric" autocomplete="new-password" maxlength="6"></div>
+    <p class="err" id="mpErr" hidden></p>
+    <div class="row"><button class="btn hot grow" data-act="saveMyPin" data-n="${esc(n)}">Salvar PIN</button>${first ? `<button class="btn ghost" data-act="skipMyPin" data-n="${esc(n)}" data-h="${esc(h)}">Agora não</button>` : '<button class="btn ghost" data-act="close">Cancelar</button>'}</div>`);
+}
+function artistPinsSheet(){
+  sheet(`<h4>PIN de alguém</h4><p class="hint">Pra quem esqueceu o PIN ou entrou na lista agora. Ao trocar, a pessoa sai do app e entra com o novo.</p>
+    <div class="field"><label class="lbl" for="apA">Artista</label><select id="apA">${gerentes().concat(S.artists).map(a => `<option>${esc(a)}</option>`).join('')}</select></div>
+    <div class="field"><label class="lbl" for="apP">Novo PIN</label><input id="apP" type="password" inputmode="numeric" autocomplete="new-password" maxlength="6"></div>
+    <p class="err" id="apErr" hidden></p>
+    <div class="row"><button class="btn hot grow" data-act="saveArtPin">Salvar</button><button class="btn ghost" data-act="close">Cancelar</button></div>`);
+}
+
+/* ---------- tour guiado do primeiro acesso ---------- */
+const tutKind = () => S.mgr ? 'mgr' : 'art';
+const tabBtn = t => `.tab[data-tab="${t}"]`;
+function tourSteps(k){
+  const rest = S.descanso ? ` e você descansa ${S.descanso} min antes da sua próxima` : '';
+  const help = {tab: 'bancadas', sel: '[data-act="help"]', t: 'Quer rever?', x: 'Toque no <b>?</b> quando quiser e o tour começa de novo.'};
+  if (k === 'art' && noDay(S.me)) return [
+    {tab: 'bancadas', t: 'Oi, ' + esc(S.me) + '!', x: 'No dia você vende seus flashes e tatua depois, agendado. Vou te mostrar onde acompanhar.'},
+    {tab: 'meu', sel: tabBtn('meu'), t: 'Meu painel', x: 'Cada arte vendida aparece aqui. Toque nela pra ver o contato do cliente e marcar <b>Já agendei</b>.'},
+    {tab: 'bancadas', sel: '#askBtn', t: 'Chamar gerente', x: 'Precisa de ajuda? Toque aqui.'},
+    {tab: 'avisos', sel: tabBtn('avisos'), t: 'Avisos', x: 'Os recados da organização ficam aqui.'},
+    help
+  ];
+  if (k === 'art') return [
+    {tab: 'bancadas', t: 'Oi, ' + esc(S.me) + '!', x: 'Vou te mostrar rapidinho onde fica cada coisa.'},
+    {tab: 'bancadas', sel: '#alerts .banner.calm', t: 'Ligue o som', x: 'O alarme toca na sua vez. Deixe esta tela aberta: com o celular bloqueado, ele pode não tocar.', sound: true},
+    {tab: 'bancadas', sel: '#benches .poster', t: 'Bancadas', x: 'Na sua vez, a tela fica rosa e mostra a bancada e o cliente. Foi pra lá? Toque em <b>Cheguei, começar</b>.'},
+    {tab: 'bancadas', sel: '#benches .poster', t: 'Terminou a tattoo?', x: 'Toque em <b>Terminei, liberar</b> na sua bancada. A próxima senha é chamada sozinha' + rest + '.'},
+    {tab: 'fila', sel: tabBtn('fila'), t: 'Fila', x: 'Aqui você vê quem está esperando e quanto falta.'},
+    {tab: 'meu', sel: tabBtn('meu'), t: 'Meu painel', x: 'Suas artes vendidas e quanto fica com você. Toque numa arte pra ver o contato do cliente.'},
+    {tab: 'bancadas', sel: '#askBtn', t: 'Chamar gerente', x: 'Precisa de material ou de ajuda? Toque aqui.'},
+    {tab: 'avisos', sel: tabBtn('avisos'), t: 'Avisos', x: 'Os recados da organização ficam aqui.'},
+    help
+  ];
+  return [
+    {tab: 'bancadas', sel: '#meBtn', t: 'Perfil de gerente', x: 'Neste perfil aparecem as abas de vendas, flashes e gerência. Pra trocar de perfil, toque aqui.'},
+    {tab: 'flashes', sel: '.tools .btn.hot', t: 'Cadastre os flashes', x: 'Coloque o código da etiqueta, o artista e o preço de cada flash.'},
+    {tab: 'vender', sel: '#sCode', t: 'Comece a venda', x: 'Digite o código da etiqueta. O flash e o preço aparecem sozinhos.'},
+    {tab: 'vender', sel: '#sGo', t: 'Finalize', x: 'Com cliente e pagamento preenchidos, toque aqui. A senha é gerada e dá pra mandar no WhatsApp.'},
+    {tab: 'vender', sel: '#segDia', t: 'Caixa do dia', x: 'Total vendido, o que falta receber e a divisão por artista.'},
+    {tab: 'bancadas', sel: '#benches .poster', t: 'Bancadas', x: 'Abriu uma bancada, a próxima senha é chamada sozinha. Aqui você também pausa uma bancada pra limpeza.'},
+    {tab: 'fila', sel: tabBtn('fila'), t: 'Fila', x: 'Mande uma senha pra uma bancada específica ou cancele, se precisar.'},
+    {tab: 'gerente', sel: '#avTxt', t: 'Avisos', x: 'Mande recados pra todos ou pra um artista. Quem te chamar aparece em rosa no topo.'},
+    help
+  ];
+}
+function tourStart(k){
+  closeSheet();
+  S.tour = {k, i: 0, steps: tourSteps(k)};
+  $('tourRoot').innerHTML = '<div class="tour-block"></div><div class="tour-hole none" id="tourHole"></div><div class="tour-box mid" id="tourBox" role="dialog" aria-modal="true" aria-live="polite"></div>';
+  tourShow();
+}
+function tourShow(){
+  const T = S.tour, st = T.steps[T.i], last = T.i === T.steps.length - 1;
+  if (st.tab && st.tab !== S.tab){ S.tab = st.tab; if (st.tab === 'vender') S.sellView = 'nova'; render(); window.scrollTo({top: 0, behavior: 'instant'}); }
+  $('tourBox').innerHTML = `<div class="tour-top"><span class="lbl num">${T.i + 1} de ${T.steps.length}</span>${last ? '' : '<button class="tour-skip" data-act="tourEnd">Pular</button>'}</div>
+    <h4>${st.t}</h4><p>${st.x}</p>
+    ${st.sound ? `<button class="btn ${S.sound ? 'pri' : 'hot'}" data-act="tourSound">${S.sound ? 'Som ligado' : 'Ligar o som'}</button>` : ''}
+    <div class="tour-row">${T.i ? '<button class="btn ghost" data-act="tourBack">Voltar</button>' : ''}<button class="btn pri grow" id="tourNext" data-act="${last ? 'tourEnd' : 'tourNext'}">${last ? 'Bora!' : 'Próximo'}</button></div>`;
+  const el = st.sel && document.querySelector(st.sel);
+  if (el){ const r = el.getBoundingClientRect(); if (r.width && (r.top < 90 || r.bottom > innerHeight - 90) && !el.closest('.mast,.tabbar,.fab')) el.scrollIntoView({block: 'center', behavior: 'instant'}); }
+  tourPlace();
+  $('tourNext').focus({preventScroll: true});
+}
+// Reposiciona pelo seletor: a tela é redesenhada a cada atualização ao vivo.
+function tourPlace(){
+  if (!S.tour) return;
+  const hole = $('tourHole'), box = $('tourBox'), st = S.tour.steps[S.tour.i];
+  const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+  const vw = document.documentElement.clientWidth, vh = innerHeight, bw = box.offsetWidth, bh = box.offsetHeight;
+  const el = st.sel && document.querySelector(st.sel), r = el && el.getBoundingClientRect();
+  const put = (x, y, w, h) => { hole.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${h}px`; };
+  if (!r || !r.width){
+    put(vw / 2, vh / 2, 0, 0); hole.className = 'tour-hole none'; box.className = 'tour-box mid';
+    box.style.left = (vw - bw) / 2 + 'px'; box.style.top = (vh - bh) / 2 + 'px'; return;
+  }
+  const gap = 5, down = r.top + r.height / 2 < vh / 2, cx = r.left + r.width / 2;
+  put(r.left - gap, r.top - gap, r.width + gap * 2, r.height + gap * 2); hole.className = 'tour-hole';
+  const x = clamp(cx - bw / 2, 12, vw - bw - 12);
+  box.style.left = x + 'px';
+  box.style.top = clamp(down ? r.bottom + gap + 15 : r.top - gap - 15 - bh, 8, vh - bh - 8) + 'px';
+  box.style.setProperty('--ax', clamp(cx - x, 20, bw - 20) + 'px');
+  box.className = 'tour-box ' + (down ? 'down' : 'up');
+}
+function tourEnd(){
+  S.tour = null; $('tourRoot').innerHTML = '';
+  S.tab = 'bancadas'; store.set('aba', 'bancadas'); render(); window.scrollTo({top: 0, behavior: 'instant'});
+}
+// Aparece sozinho no primeiro acesso de cada celular; o botão ? mostra de novo.
+function tutAuto(){
+  if (!S.me) return;
+  const k = tutKind();
+  S.tutDone = S.tutDone || {};
+  if (S.tour || S.tutDone[k] || store.get('tutorial-' + k)) return;
+  S.tutDone[k] = true; store.set('tutorial-' + k, '1');
+  tourStart(k);
+}
+addEventListener('resize', tourPlace);
+addEventListener('scroll', tourPlace, {passive: true});
+
+/* ---------- escrita ---------- */
+async function guard(fn){
+  if (!S.db){ toast('Sem conexão com os dados. Recarregue a página.'); return; }
+  if (S.readOnly){ toast('Seu acesso é só de leitura. Peça ao Diego acesso de edição.'); return; }
+  if (S.busy) return;
+  S.busy = true;
+  try { await fn(); }
+  catch(e){
+    if (e && e.code === 'invalid_argument'){ S.readOnly = true; toast('Seu acesso é só de leitura. Peça ao Diego acesso de edição.'); }
+    else toast(e && e.message ? e.message : 'Não deu certo. Tente de novo.');
+  }
+  finally { S.busy = false; }
+}
+
+async function nextNumber(which = 'senhas'){
+  const ref = S.db.doc('contador/' + which);
+  for (let i = 0; i < 10; i++){
+    const r = await ref.acquire({holder: TAB, ttlMs: 1000});
+    if (r.acquired){
+      const s = await ref.get();
+      const n = ((s.exists && s.data().n) || 0) + 1;
+      await ref.set({n});
+      return n;
+    }
+    await sleep(300 + Math.random() * 400);
+  }
+  throw new Error('Muita gente pegando senha ao mesmo tempo. Tente de novo.');
+}
+
+async function lockBench(id){
+  const ref = S.db.doc('bancadas/' + id);
+  const r = await ref.acquire({holder: TAB, ttlMs: 2000});
+  if (!r.acquired) return null;
+  const s = await ref.get();
+  return s.exists ? {ref, data: s.data()} : null;
+}
+
+// Coloca a próxima senha (ou uma escolhida) numa bancada livre. Devolve true se chamou alguém.
+async function callInto(benchId, ticketId){
+  const lb = await lockBench(benchId);
+  if (!lb || lb.data.status !== 'livre') return false;
+  const list = ticketId ? S.tickets.filter(t => t.id === ticketId) : callable();
+  for (const t of list){
+    const ref = S.db.doc('senhas/' + t.id);
+    const r = await ref.acquire({holder: TAB, ttlMs: 2000});
+    if (!r.acquired) continue;
+    const s = await ref.get();
+    if (!s.exists || s.data().status !== 'aguardando') continue;
+    const now = Date.now();
+    await ref.update({status: 'chamado', bancada: benchId, chamadaEm: now});
+    await lb.ref.update({status: 'chamado', artista: t.artista, cliente: t.cliente || '', obs: t.obs || '', senha: t.id, senhaNum: t.num, desde: now});
+    return true;
+  }
+  return false;
+}
+
+async function fillFreeBenches(){
+  for (const b of S.benches.filter(x => x.status === 'livre')){
+    if (!callable().length) break;
+    await callInto(b.id);
+    await sleep(150);
+  }
+}
+
+const blankBench = n => ({num: n, nome: '', status: 'livre', artista: '', cliente: '', obs: '', senha: '', senhaNum: 0, desde: Date.now()});
+
+const act = {
+  whoami: whoSheet,
+  login: doLogin,
+  lgClose: closeLogin,
+  lgName(el){
+    const k = norm(el.value), hits = nameHits(el.value), one = hits.length === 1 && norm(hits[0]) === k;
+    $('lgSug').innerHTML = one ? '' : hits.slice(0, 5).map(n => `<button data-act="lgPick" data-n="${esc(n)}">${esc(n)}</button>`).join('');
+  },
+  lgPick(el){ $('lgName').value = el.dataset.n; $('lgSug').innerHTML = ''; if (S.owner) doLogin(); else $('lgPin').focus(); },
+  setArtPins: artistPinsSheet,
+  myPin(){ myPinSheet(S.me, store.get('eu-pin')); },
+  skipMyPin(el){ setMe(el.dataset.n, el.dataset.h); },
+  async saveMyPin(el){
+    const n = el.dataset.n, a = $('mpA').value.trim(), b = $('mpB').value.trim(), err = $('mpErr');
+    const fail = m => { err.textContent = m; err.hidden = false; };
+    if (!/^\d{4,6}$/.test(a)) return fail('O PIN precisa ter de 4 a 6 números.');
+    if (a !== b) return fail('Os dois PINs não são iguais.');
+    const h = await artHash(n, a), old = store.get('eu-pin');
+    return guard(async () => {
+      if (S.me === n) store.set('eu-pin', h); // antes de gravar, pra não sair do app quando o novo PIN chegar
+      try { await patchPin(n, h, true); } catch(e){ if (S.me === n) store.set('eu-pin', old); throw e; }
+      setMe(n, h); toast('PIN novo salvo.');
+    });
+  },
+  async saveArtPin(){
+    const a = $('apA').value, p = $('apP').value.trim(), err = $('apErr');
+    if (!/^\d{4,6}$/.test(p)){ err.textContent = 'O PIN precisa ter de 4 a 6 números.'; err.hidden = false; return; }
+    const h = await artHash(a, p);
+    return guard(async () => { await patchPin(a, h, false); closeSheet(); toast('PIN de ' + a + ' salvo.'); });
+  },
+  help(){ if (S.me) tourStart(tutKind()); else whoSheet(); },
+  tourNext(){ S.tour.i++; tourShow(); },
+  tourBack(){ S.tour.i--; tourShow(); },
+  tourEnd,
+  tourSound(){ act.sound(); tourShow(); },
+  close: closeSheet,
+  closeBg(el, e){ if (e.target === el) closeSheet(); },
+  tab(el){
+    const t = el.dataset.tab;
+    if (t !== S.tab){ S.tab = t; store.set('aba', t); render(); }
+    window.scrollTo({top: 0, behavior: 'instant'});
+  },
+  /* vendas */
+  sellView(el){ S.sellView = el.dataset.v; render(); if (S.sellView === 'nova') $('sCode').focus(); },
+  saleCode(el){
+    const f = flashByCode(el.value); S.sale.flash = f ? f.id : null;
+    if (f && !S.sale.valTouched) $('sVal').value = f.preco ? String(f.preco).replace('.', ',') : '';
+    if (f && !S.sale.comTouched) $('sCom').value = String(comOf(f.artista)).replace('.', ',');
+    renderSell();
+  },
+  saleCom(){ S.sale.comTouched = true; renderSell(); },
+  saleLocal(el){ S.sale.local = el.dataset.v; S.sale.comTouched = true; $('sCom').value = el.dataset.v === 'casa' ? '30' : '20'; renderSell(); },
+  markBooked(el){ const on = el.dataset.on === '1'; return guard(async () => { await S.db.doc('vendas/' + el.dataset.v).update({agendado: on}); toast(on ? 'Marcado como agendado.' : 'Voltou pra agendar.'); }); },
+  editDay: daySheet,
+  saveDay(){ const list = [...document.querySelectorAll('[data-day]')].filter(el => el.checked).map(el => el.dataset.day);
+    return guard(async () => { await saveConfig({soAgenda: list}); closeSheet(); toast('Lista salva.'); }); },
+  editComs: () => comsSheet(),
+  saveComs(){
+    const padrao = money($('cmP').value);
+    if (padrao > 100){ toast('A comissão vai de 0 a 100%.'); return; }
+    const coms = {};
+    document.querySelectorAll('[data-cm]').forEach(el => { if (el.value.trim() !== '') coms[el.dataset.cm] = Math.min(100, money(el.value)); });
+    return guard(async () => { await saveConfig({comissaoPadrao: padrao, comissoes: coms}); closeSheet(); toast('Comissões salvas.'); });
+  },
+  saleVal(){ S.sale.valTouched = true; renderSell(); },
+  payMethod(el){ S.sale.pay = el.dataset.v; renderSell(); },
+  payState(el){ S.sale.paid = el.dataset.v === '1'; renderSell(); },
+  pickFlash: pickSheet,
+  pickSearch(el){ $('pickList').innerHTML = pickList(el.value); },
+  choose(el){
+    const f = S.flashes.find(x => x.id === el.dataset.f); if (!f) return;
+    closeSheet(); S.tab = 'vender'; S.sellView = 'nova'; store.set('aba', 'vender');
+    $('sCode').value = f.codigo; S.sale.valTouched = false; S.sale.comTouched = false; act.saleCode($('sCode')); render(); $('sCli').focus();
+  },
+  clearSale(){ resetSale(); $('sCode').focus(); },
+  finishSale,
+  newSale(){ closeSheet(); resetSale(); S.tab = 'vender'; S.sellView = 'nova'; render(); $('sCode').focus(); },
+  markPaid(el){ return guard(async () => { await S.db.doc('vendas/' + el.dataset.v).update({pago: true, pagoEm: Date.now()}); toast('Marcado como pago.'); }); },
+  cancelSale(el){
+    const v = S.sales.find(x => x.id === el.dataset.v); if (!v) return;
+    sheet(`<h4>Cancelar a venda ${pad(v.num)}?</h4><p class="hint">${esc(v.cliente)} · ${esc(v.flashNome)} (${esc(v.codigo)}) com ${esc(v.artista)} · ${brl(v.valor)}. O flash volta a ficar disponível${v.senhaNum ? ' e a senha ' + pad(v.senhaNum) + ' sai da fila, se ainda não foi chamada' : ''}.</p>
+      <div class="row"><button class="btn hot grow" data-act="confirmCancelSale" data-v="${v.id}">Sim, cancelar venda</button><button class="btn ghost" data-act="close">Voltar</button></div>`);
+  },
+  confirmCancelSale(el){ return guard(async () => {
+    const v = S.sales.find(x => x.id === el.dataset.v); if (!v) return;
+    await S.db.doc('vendas/' + v.id).update({status: 'cancelada', canceladaEm: Date.now()});
+    const t = v.senha && S.tickets.find(x => x.id === v.senha);
+    closeSheet();
+    if (t && t.status === 'aguardando'){ await S.db.doc('senhas/' + t.id).update({status: 'cancelado', fim: Date.now()}); toast('Venda e senha canceladas.'); }
+    else if (t && (t.status === 'chamado' || t.status === 'atendendo')) toast('Venda cancelada. A senha já está na bancada: resolva por lá.');
+    else toast('Venda cancelada.');
+  }); },
+  /* flashes */
+  async flFile(el){
+    const file = el.files && el.files[0]; if (!file || !S.assets) return;
+    S.flUp = true; flPicDraw();
+    try { const r = await S.assets.upload(await shrink(file)); S.flPhoto = r.id; }
+    catch(e){ toast('Não deu pra enviar a foto. Tente de novo.'); }
+    S.flUp = false; flPicDraw();
+  },
+  flNoPhoto(){ S.flPhoto = ''; flPicDraw(); },
+  zoom(el){ sheet(`<img class="fl-zoom" src="${esc(el.dataset.src)}" alt=""><div class="row"><button class="btn pri grow" data-act="close">Fechar</button></div>`); },
+  flFilter(el){ S.flArt = el.value; renderFlashes(); },
+  flSearch(el){ S.flQ = el.value; renderFlashes(); },
+  newFlash(el){ flashSheet(null, el.dataset.a || S.flArt); },
+  editFlash(el){ flashSheet(el.dataset.f); },
+  sellThis(el){ act.choose(el); },
+  saveFlash(el){ return saveFlash(el.dataset.f || null, el.dataset.more === '1'); },
+  deleteFlash(el){ return guard(async () => { await S.db.doc('flashes/' + el.dataset.f).delete(); closeSheet(); toast('Flash excluído.'); }); },
+  editJob(el){ editSheet(el.dataset.t); },
+  saveJob(el){
+    const id = el.dataset.t, cliente = $('eCli').value.trim(), contato = $('eTel').value.trim(), insta = igHandle($('eIg').value), obs = $('eObs').value.trim();
+    return guard(async () => {
+      await S.db.doc('senhas/' + id).update({cliente, contato, insta, obs});
+      const b = S.benches.find(x => x.senha === id && x.status !== 'livre');
+      if (b) await S.db.doc('bancadas/' + b.id).update({cliente, obs});
+      closeSheet(); toast('Salvo.');
+    });
+  },
+  viewArtist(el){ S.view = el.value; S.soldOpen = null; render(); },
+  meuView(el){ S.meuView = el.dataset.v; render(); },
+  soldOpen(el){ S.soldOpen = S.soldOpen === el.dataset.v ? null : el.dataset.v; render(); },
+  hideCall(el){ S.hiddenCalls.add(el.dataset.t); render(); },
+  dismiss(el){ S.dismissed = Number(el.dataset.t); store.set('lido', String(S.dismissed)); render(); },
+  sound(){
+    S.sound = true; beep(); render();
+    try { navigator.wakeLock && navigator.wakeLock.request('screen').catch(() => {}); } catch(e){}
+    try { window.Notification && Notification.permission === 'default' && Notification.requestPermission().catch(() => {}); } catch(e){}
+  },
+  newTicket(){ if (!S.artists.length){ toast('A lista de tatuadores ainda não carregou.'); return; } ticketSheet(); },
+  occupy(el){ ticketSheet(el.dataset.b); },
+  askMgr: askSheet,
+  confirmTicket(){ return submitTicket(null); },
+  confirmOccupy(el){ return submitTicket(el.dataset.b); },
+  callNext(el){ return guard(async () => { const ok = await callInto(el.dataset.b); toast(ok ? 'Senha chamada.' : 'Alguém já mexeu nessa bancada.'); }); },
+  callTo(el){ return guard(async () => { const ok = await callInto(el.dataset.b, el.dataset.t); toast(ok ? 'Senha chamada.' : 'Não deu: a bancada ou a senha mudou.'); }); },
+  start(el){ return guard(async () => {
+    const lb = await lockBench(el.dataset.b);
+    if (!lb || lb.data.status !== 'chamado') return;
+    const now = Date.now();
+    await lb.ref.update({status: 'ocupada', desde: now});
+    if (lb.data.senha) await S.db.doc('senhas/' + lb.data.senha).update({status: 'atendendo', inicio: now});
+    toast('Boa sessão!');
+  }); },
+  skip(el){ return guard(async () => {
+    const lb = await lockBench(el.dataset.b);
+    if (!lb || lb.data.status !== 'chamado') return;
+    if (lb.data.senha) await S.db.doc('senhas/' + lb.data.senha).update({status: 'aguardando', ordem: Date.now(), bancada: '', pulada: true});
+    await lb.ref.update({status: 'livre', artista: '', cliente: '', obs: '', senha: '', senhaNum: 0, desde: Date.now()});
+    await sleep(200);
+    await callInto(el.dataset.b);
+    toast('Senha voltou pro fim da fila.');
+  }); },
+  release(el){ return guard(async () => {
+    const lb = await lockBench(el.dataset.b);
+    if (!lb || lb.data.status !== 'ocupada') return;
+    if (lb.data.senha) await S.db.doc('senhas/' + lb.data.senha).update({status: 'concluido', fim: Date.now()});
+    await lb.ref.update({status: 'livre', artista: '', cliente: '', obs: '', senha: '', senhaNum: 0, desde: Date.now()});
+    await sleep(200);
+    const called = await callInto(el.dataset.b);
+    toast(called ? 'Bancada liberada e próxima senha chamada.' : 'Bancada liberada.');
+  }); },
+  pause(el){ return guard(async () => { await S.db.doc('bancadas/' + el.dataset.b).update({status: 'pausa', motivo: 'Limpeza ou montagem', desde: Date.now()}); }); },
+  unpause(el){ return guard(async () => {
+    await S.db.doc('bancadas/' + el.dataset.b).update({status: 'livre', desde: Date.now()});
+    await sleep(200); await callInto(el.dataset.b);
+  }); },
+  cancel(el){ return guard(async () => { await S.db.doc('senhas/' + el.dataset.t).update({status: 'cancelado', fim: Date.now()}); toast('Senha cancelada.'); }); },
+  resolve(el){ return guard(async () => { await S.db.doc('avisos/' + el.dataset.id).update({resolvido: true}); }); },
+  quickAsk(el){ $('askTxt').value = el.dataset.t; },
+  sendAsk(){ const txt = ($('askTxt').value || '').trim(); if (!txt){ $('askTxt').focus(); return; }
+    return guard(async () => { await S.db.collection('avisos').add({tipo: 'pedido', texto: txt, de: S.me || 'Organização', criadoEm: Date.now(), resolvido: false}); closeSheet(); toast('Gerente chamado.'); }); },
+  sendNote(){ const txt = ($('avTxt').value || '').trim(); const para = $('avPara').value; if (!txt){ $('avTxt').focus(); return; }
+    return guard(async () => { await S.db.collection('avisos').add({tipo: 'aviso', texto: txt, para, criadoEm: Date.now()}); $('avTxt').value = ''; document.activeElement && document.activeElement.blur(); toast('Aviso enviado' + (para ? ' pra ' + para : ' pra todos') + '.'); render(); }); },
+  setRest(el){ const m = Number(el.value); el.blur();
+    return guard(async () => { await saveConfig({descanso: m}); toast(m ? 'Descanso de ' + m + ' min entre tattoos.' : 'Descanso desligado.'); await sleep(300); await fillFreeBenches(); }); },
+  createBenches(){ return guard(async () => { for (let i = 1; i <= 8; i++) await S.db.doc('bancadas/b' + pad(i)).set(blankBench(i)); }); },
+  addBench(){ return guard(async () => { const n = S.benches.reduce((m, b) => Math.max(m, b.num), 0) + 1; await S.db.doc('bancadas/b' + pad(n)).set(blankBench(n)); }); },
+  removeBench(){ const last = S.benches[S.benches.length - 1]; if (!last) return;
+    if (last.status !== 'livre' && last.status !== 'pausa'){ toast('A última bancada está em uso. Libere antes de remover.'); return; }
+    return guard(async () => { await S.db.doc('bancadas/' + last.id).delete(); }); },
+  renameBench(){
+    sheet(`<h4>Nomear bancada</h4><p class="hint">Ex.: "perto da janela", "sala 2". Ajuda quem chega a achar.</p>
+      <div class="field"><label class="lbl" for="rnB">Bancada</label><select id="rnB">${S.benches.map(b => `<option value="${b.id}">${two(b.num)}${b.nome ? ' · ' + esc(b.nome) : ''}</option>`).join('')}</select></div>
+      <div class="field"><label class="lbl" for="rnN">Nome</label><input id="rnN" maxlength="30"></div>
+      <div class="row"><button class="btn pri grow" data-act="saveRename">Salvar</button><button class="btn ghost" data-act="close">Cancelar</button></div>`);
+  },
+  saveRename(){ const id = $('rnB').value; const nome = $('rnN').value.trim(); return guard(async () => { await S.db.doc('bancadas/' + id).update({nome}); closeSheet(); }); },
+  editArtists(){
+    sheet(`<h4>Tatuadores do Flash Day</h4><p class="hint">Um nome por linha. É a lista que aparece em "Quem é você?" e nas senhas.</p>
+      <div class="field"><label class="lbl" for="arT">Nomes</label><textarea id="arT">${esc(S.artists.join('\n'))}</textarea></div>
+      <div class="row"><button class="btn pri grow" data-act="saveArtists">Salvar lista</button><button class="btn ghost" data-act="close">Cancelar</button></div>`);
+  },
+  saveArtists(){ const list = [...new Set($('arT').value.split('\n').map(s => s.trim()).filter(Boolean))];
+    return guard(async () => { await saveConfig({artistas: list}); closeSheet(); toast('Lista salva.'); }); },
+  resetDay(){
+    sheet(`<h4>Zerar o dia?</h4><p class="hint">Apaga todas as senhas, vendas e avisos, libera todas as bancadas e volta a contagem pra 001. Os flashes cadastrados, a lista de tatuadores, o descanso e as bancadas ficam.</p>
+      <div class="row"><button class="btn hot grow" data-act="confirmReset">Sim, zerar tudo</button><button class="btn ghost" data-act="close">Cancelar</button></div>`);
+  },
+  confirmReset(){ return guard(async () => {
+    for (const t of S.tickets) await S.db.doc('senhas/' + t.id).delete();
+    for (const n of S.notes) await S.db.doc('avisos/' + n.id).delete();
+    for (const v of S.sales) await S.db.doc('vendas/' + v.id).delete();
+    await S.db.doc('contador/vendas').set({n: 0});
+    for (const b of S.benches) await S.db.doc('bancadas/' + b.id).set(Object.assign(blankBench(b.num), {nome: b.nome || ''}));
+    await S.db.doc('contador/senhas').set({n: 0});
+    closeSheet(); toast('Dia zerado.');
+  }); }
+};
+
+function submitTicket(benchId){
+  const artista = $('fArt').value, cliente = $('fCli').value.trim(), obs = $('fObs').value.trim();
+  const contato = $('fTel').value.trim(), insta = igHandle($('fIg').value);
+  const err = $('fErr');
+  if (!artista){ err.textContent = 'Escolha o tatuador.'; err.hidden = false; return; }
+  if (benchId && onBench(artista)){ err.textContent = artista + ' já está em outra bancada.'; err.hidden = false; return; }
+  if (benchId && resting(artista) && !S.mgr){ err.textContent = artista + ' está no descanso até ' + hhmm(restUntil(artista)) + '. Gere uma senha: ela é chamada depois.'; err.hidden = false; return; }
+  return guard(async () => {
+    const num = await nextNumber();
+    const now = Date.now();
+    if (benchId){
+      const lb = await lockBench(benchId);
+      if (!lb || lb.data.status !== 'livre'){ throw new Error('Essa bancada acabou de ser ocupada.'); }
+      const ref = S.db.collection('senhas').doc();
+      await ref.set({num, artista, cliente, obs, contato, insta, status: 'atendendo', ordem: now, criadaEm: now, chamadaEm: now, inicio: now, bancada: benchId, criadaPor: S.me || ''});
+      await lb.ref.update({status: 'ocupada', artista, cliente, obs, senha: ref.id, senhaNum: num, desde: now});
+      closeSheet(); toast('Bancada ocupada. Boa sessão!');
+    } else {
+      await S.db.collection('senhas').add({num, artista, cliente, obs, contato, insta, status: 'aguardando', ordem: now, criadaEm: now, criadaPor: S.me || ''});
+      printedSheet(num, artista, cliente, obs);
+      await sleep(400);
+      await fillFreeBenches();
+    }
+  });
+}
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el || !act[el.dataset.act]) return;
+  if (el.dataset.act === 'closeBg' && e.target !== el) return;
+  act[el.dataset.act](el, e);
+});
+document.addEventListener('change', e => {
+  const el = e.target.closest('[data-chg]');
+  if (el && act[el.dataset.chg]) act[el.dataset.chg](el, e);
+});
+document.addEventListener('input', e => {
+  const el = e.target.closest('[data-in]');
+  if (el && act[el.dataset.in]) act[el.dataset.in](el, e);
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.id === 'sCode'){ e.preventDefault(); if (S.sale.flash) $('sCli').focus(); }
+  if (e.key === 'Escape' && S.tour) tourEnd();
+  if (e.key === 'Escape' && $('sheetRoot').innerHTML) closeSheet();
+  if (e.key === 'Enter' && e.target.id === 'avTxt') act.sendNote();
+  if (e.key === 'Enter' && e.target.id === 'lgName'){ if (S.owner) doLogin(); else $('lgPin').focus(); }
+  if (e.key === 'Enter' && e.target.id === 'lgPin') doLogin();
+});
+
+/* ---------- som ---------- */
+let ac = null;
+function beep(times = 1){
+  if (!S.sound) return;
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    for (let i = 0; i < times; i++){
+      const o = ac.createOscillator(), g = ac.createGain(), t0 = ac.currentTime + i * 0.35;
+      o.type = 'square'; o.frequency.setValueAtTime(880, t0); o.frequency.setValueAtTime(1320, t0 + 0.12);
+      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.25, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.28);
+      o.connect(g).connect(ac.destination); o.start(t0); o.stop(t0 + 0.3);
+    }
+  } catch(e){}
+  try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch(e){}
+}
+
+function checkPings(){
+  myCalls().forEach(t => { if (!S.seenCalls.has(t.id)){ S.seenCalls.add(t.id); beep(3); notifyCall(t); } });
+  S.notes.forEach(n => {
+    if (S.seenNotes.has(n.id)) return;
+    S.seenNotes.add(n.id);
+    if (S.firstNotes) return;
+    if (n.tipo === 'aviso' && (!n.para || n.para === S.me)) beep(n.para ? 2 : 1);
+    if (n.tipo === 'pedido' && S.mgr) beep(2);
+  });
+  S.firstNotes = false;
+}
+
+// Aviso do sistema (quando a página está em segundo plano e o navegador deixa).
+function notifyCall(t){
+  try {
+    if (!window.Notification || Notification.permission !== 'granted' || !document.hidden) return;
+    const b = S.benches.find(x => x.id === t.bancada);
+    new Notification('Sua vez! Bancada ' + (b ? two(b.num) : ''), { body: 'Senha ' + pad(t.num) + (t.cliente ? ' · ' + t.cliente : ''), tag: 'chamada-' + t.id, requireInteraction: true });
+  } catch(e){}
+}
+
+// Enquanto a chamada não for respondida: toca de novo a cada 8 s e pisca o título da aba.
+const baseTitle = document.title;
+let blink = false;
+setInterval(() => {
+  const pending = myCalls().filter(t => !S.hiddenCalls.has(t.id));
+  if (!pending.length){ if (document.title !== baseTitle) document.title = baseTitle; return; }
+  const b = S.benches.find(x => x.id === pending[0].bancada);
+  blink = !blink;
+  document.title = blink ? '🔔 SUA VEZ · Bancada ' + (b ? two(b.num) : '') : baseTitle;
+}, 1000);
+setInterval(() => { if (myCalls().some(t => !S.hiddenCalls.has(t.id))) beep(3); }, 8000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+
+/* ---------- conexão ---------- */
+function setSync(text, ok){ $('sync').innerHTML = '<i></i>' + esc(text); $('sync').classList.toggle('off', !ok); }
+
+async function boot(){
+  render();
+  if (!window.claude || !window.claude.use){ setSync('Sem conexão', false); $('footnote').textContent = 'Sem conexão. Confira a internet e recarregue a página.'; return; }
+  if (!S.me) whoSheet();
+  const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+  S.db = db; S.user = user;
+  window.claude.use('assets').then(a => { S.assets = a; flPicDraw(); }).catch(() => {});
+  if (!db){ closeLogin(); setSync('Sem conexão', false); $('footnote').textContent = 'Sem conexão. Confira a internet e recarregue a página.'; S.ready = true; render(); return; }
+  if (user){ try { S.owner = !!(await user.isOwner()); } catch(e){} }
+  if (S.owner && $('lgPinW')) $('lgPinW').hidden = true;
+  if (user){ try { const w = await user.can('data.write'); if (w === false){ S.readOnly = true; $('footnote').textContent = 'Você está vendo em modo leitura. Para mexer nas bancadas, peça ao Diego acesso de edição.'; } } catch(e){} }
+  let got = 0; const mark = () => { if (++got >= 6 && !S.ready){ S.ready = true; } };
+  const onErr = () => setSync('Conexão caiu · recarregue a página', false);
+  db.collection('bancadas').orderBy('num').onSnapshot(s => { S.benches = s.docs.map(d => Object.assign({id: d.id}, d.data())); mark(); afterSnap(); }, onErr);
+  db.collection('senhas').orderBy('ordem').onSnapshot(s => { S.tickets = s.docs.map(d => Object.assign({id: d.id}, d.data())); mark(); afterSnap(); }, onErr);
+  db.collection('avisos').orderBy('criadoEm', 'desc').limit(40).onSnapshot(s => { S.notes = s.docs.map(d => Object.assign({id: d.id}, d.data())); mark(); afterSnap(); }, onErr);
+  db.collection('flashes').orderBy('codigo').onSnapshot(s => { S.flashes = s.docs.map(d => Object.assign({id: d.id}, d.data())); mark(); afterSnap(); }, onErr);
+  db.collection('vendas').orderBy('criadaEm', 'desc').onSnapshot(s => { S.sales = s.docs.map(d => Object.assign({id: d.id}, d.data())); mark(); afterSnap(); }, onErr);
+  db.doc('config/geral').onSnapshot(s => {
+    const d = s.exists ? s.data() : {};
+    S.artists = Array.isArray(d.artistas) ? d.artistas.slice() : [];
+    S.descanso = typeof d.descanso === 'number' ? d.descanso : 15;
+    S.cfg = d;
+    S.comPadrao = typeof d.comissaoPadrao === 'number' ? d.comissaoPadrao : 30;
+    S.coms = d.comissoes && typeof d.comissoes === 'object' ? d.comissoes : {};
+    if (S.me && !S.artists.includes(S.me) && !(d.gerentes || []).includes(S.me)){ S.me = null; store.set('eu', null); store.set('eu-pin', null); } // perfil que saiu da lista
+    if (S.me && !S.owner && store.get('eu-pin') !== (d.pinsArtistas || {})[S.me]){ S.me = null; store.set('eu', null); store.set('eu-pin', null); }
+    S.mgr = isMgr(S.me);
+    mark(); afterSnap();
+  }, onErr);
+}
+function afterSnap(){
+  if (S.ready){ setSync('Ao vivo · ' + hhmm(Date.now()), true); checkPings(); }
+  render();
+  if (S.ready && !S.me && !$('loginRoot').innerHTML && !$('sheetRoot').innerHTML) whoSheet();
+  if (S.ready && S.me && !$('sheetRoot').innerHTML) tutAuto();
+}
+
+// A cada 30 s: atualiza os tempos e, quando um descanso acaba, chama a senha numa bancada livre.
+// Vários celulares podem tentar ao mesmo tempo; a trava de cada bancada e senha garante uma chamada só.
+setInterval(async () => {
+  render();
+  if (!S.db || S.readOnly || S.busy || !S.ready) return;
+  if (!S.benches.some(b => b.status === 'livre') || !callable().length) return;
+  await sleep(Math.random() * 4000);
+  if (S.busy) return;
+  S.busy = true;
+  try { await fillFreeBenches(); } catch(e){} finally { S.busy = false; }
+}, 30000);
+boot();
+})();
+</script>
+
+</body></html>
