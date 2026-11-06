@@ -921,14 +921,14 @@ function renderMine(){
 
   const pick = S.mgr ? `<div class="mine-pick"><label class="lbl" for="viewSel">Ver painel de</label><select id="viewSel" data-chg="viewArtist">${artistOptions(who)}</select></div>` : '';
   const view = S.meuView === 'flashes' ? 'flashes' : 'vendidas';
-  const live = myFlashes.filter(f => f.ativo !== false && !soldOut(f)).length;
+  const live = myFlashes.filter(f => f.ativo !== false && !soldOut(f)).length, noPrice = myFlashes.filter(f => !f.preco && !soldOut(f)).length;
   $('meu').innerHTML = `${pick}
     ${status}
     ${money_ ? `<div class="me-money"><div><span class="lbl">${S.mgr && who !== S.me ? 'Fica com ' + esc(who) : 'Fica com você'}</span><strong class="num">${brl(net)}</strong></div><small class="num">de ${brl(money_)} vendidos</small></div>` : ''}
     <div class="seg" role="tablist"><button class="${view === 'vendidas' ? 'on' : ''}" data-act="meuView" data-v="vendidas">Vendidas (${soldList.length})</button><button class="${view === 'flashes' ? 'on' : ''}" data-act="meuView" data-v="flashes">Flashes (${myFlashes.length})</button></div>
     ${view === 'vendidas'
       ? (soldList.length ? `<div class="sold-list">${soldList.map(soldRow).join('')}</div>` : '<div class="empty-box">Nenhuma arte vendida ainda. Quando o gerente vender um flash seu, ele aparece aqui.</div>')
-      : (myFlashes.length ? `<p class="hint">${live} de ${myFlashes.length} disponíveis</p><div class="fls">${myFlashes.map(f => `<div class="fl ${soldOut(f) || f.ativo === false ? 'sold' : ''}"><div class="fl-h"><span class="code num">${esc(f.codigo)}</span><span class="pill ${soldOut(f) ? 's-concluido' : 's-aguardando'}">${f.ativo === false ? 'Fora de venda' : soldOut(f) ? 'Vendido' : 'Disponível'}</span></div>${flImg(f)}<div class="fl-n">${esc(f.nome || 'Flash sem nome')}</div><div class="job-t num">${f.preco ? brl(f.preco) : ''}</div></div>`).join('')}</div>` : '<div class="empty-box">Nenhum flash cadastrado ainda.</div>')}
+      : (myFlashes.length ? `<p class="hint">${live} de ${myFlashes.length} disponíveis${noPrice ? ' · ' + noPrice + ' sem preço' : ''}</p><div class="fls">${myFlashes.map(f => `<div class="fl ${soldOut(f) || f.ativo === false ? 'sold' : ''}"><div class="fl-h"><span class="code num">${esc(f.codigo)}</span><span class="pill ${soldOut(f) ? 's-concluido' : 's-aguardando'}">${f.ativo === false ? 'Fora de venda' : soldOut(f) ? 'Vendido' : 'Disponível'}</span></div>${flImg(f)}<div class="fl-n">${esc(f.nome || 'Flash sem nome')}</div><div class="job-t num">${f.preco ? brl(f.preco) : 'Sem preço'}</div>${who === S.me && !soldOut(f) ? `<div class="job-x"><button class="btn sm ${f.preco ? 'ghost' : 'hot'}" data-act="myPrice" data-f="${f.id}">${f.preco ? 'Mudar preço' : 'Definir preço'}</button></div>` : ''}</div>`).join('')}</div>` : '<div class="empty-box">Nenhum flash cadastrado ainda.</div>')}
     ${canc.length && view === 'vendidas' ? `<details class="group"><summary>Cancelados · ${canc.length}</summary><div class="jobs">${canc.map(jobCard).join('')}</div></details>` : ''}
     ${who === S.me && !S.owner ? '<div class="me-foot"><button class="btn ghost sm" data-act="myPin">Trocar meu PIN</button></div>' : ''}`;
 }
@@ -1719,6 +1719,20 @@ const act = {
   saleCom(){ S.sale.comTouched = true; renderSell(); },
   saleLocal(el){ S.sale.local = el.dataset.v; S.sale.comTouched = true; $('sCom').value = el.dataset.v === 'casa' ? '30' : '20'; renderSell(); },
   markBooked(el){ const on = el.dataset.on === '1'; return guard(async () => { await S.db.doc('vendas/' + el.dataset.v).update({agendado: on}); toast(on ? 'Marcado como agendado.' : 'Voltou pra agendar.'); }); },
+  myPrice(el){
+    const f = S.flashes.find(x => x.id === el.dataset.f); if (!f || f.artista !== S.me) return;
+    sheet(`<h4>Preço do flash ${esc(f.codigo)}</h4><p class="hint">${esc(f.nome || 'Flash sem nome')}. O novo preço vale pras próximas vendas.</p>
+      <div class="field"><label class="lbl" for="mpV">Preço (R$)</label><input id="mpV" inputmode="decimal" autocomplete="off" maxlength="10" value="${f.preco ? String(f.preco).replace('.', ',') : ''}" placeholder="200"></div>
+      <p class="err" id="mpE" hidden></p>
+      <div class="row"><button class="btn hot grow" data-act="myPriceSave" data-f="${f.id}">Salvar</button><button class="btn ghost" data-act="close">Cancelar</button></div>`);
+  },
+  myPriceSave(el){
+    const f = S.flashes.find(x => x.id === el.dataset.f), v = money($('mpV').value), err = $('mpE');
+    if (!f || f.artista !== S.me) return;
+    if (!v){ err.textContent = 'Coloque o preço.'; err.hidden = false; return; }
+    if (soldOut(f)){ err.textContent = 'Esse flash acabou de ser vendido.'; err.hidden = false; return; }
+    return guard(async () => { await S.db.doc('flashes/' + f.id).update({preco: v}); closeSheet(); toast('Preço salvo.'); });
+  },
   markInked(el){ const on = el.dataset.on === '1'; return guard(async () => { await S.db.doc('vendas/' + el.dataset.v).update({tatuado: on, tatuadoEm: on ? Date.now() : 0}); toast(on ? 'Marcado como tatuado.' : 'Voltou pra agendado.'); }); },
   editDay: daySheet,
   saveDay(){ const list = [...document.querySelectorAll('[data-day]')].filter(el => el.checked).map(el => el.dataset.day);
