@@ -371,6 +371,10 @@ button{-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-sel
 .login-sug button{border:2px solid var(--ink);background:var(--paper);padding:10px 12px;text-align:left;font-size:17px;min-height:44px}
 .login .btn{min-height:50px}
 .login .hint{text-align:center}
+#pLoc{grid-template-columns:repeat(3,1fr)}
+#pPay,#sPay{grid-template-columns:repeat(2,1fr)}
+#pvBox,#pfNow,#pfList{display:flex;flex-direction:column;gap:18px}
+#pfNow:empty{display:none}
 /* meu painel: uma coisa de cada vez */
 .me-money{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap}
 .me-money strong{display:block;font-family:var(--display);font-weight:400;font-size:clamp(34px,10vw,46px);line-height:1;margin-top:4px}
@@ -499,6 +503,56 @@ button{-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-sel
     <div id="meu"></div>
   </section>
 
+  <section class="screen" data-screen="pfila">
+    <div class="sechead"><h2>Fila do piercing</h2><span class="lbl" id="pfInfo"></span></div>
+    <div id="pfNow"></div>
+    <div id="pfList"></div>
+  </section>
+
+  <section class="screen" data-screen="pnovo">
+    <div class="sechead"><h2>Novo atendimento</h2></div>
+    <div class="sale">
+      <div class="step">
+        <span class="step-k">1 · Cliente</span>
+        <div class="field"><label class="lbl" for="pCli">Nome</label><input id="pCli" autocomplete="off" maxlength="60" placeholder="Ex.: Ana Paula"></div>
+        <div class="field"><label class="lbl" for="pTel">WhatsApp</label><input id="pTel" type="tel" inputmode="tel" autocomplete="off" maxlength="20" placeholder="(31) 99999-9999"></div>
+        <label class="check"><input type="checkbox" id="pDoc"> Conferi o documento com foto · 18+</label>
+      </div>
+      <div class="step">
+        <span class="step-k">2 · Perfuração</span>
+        <div class="chips" id="pLoc"></div>
+        <div class="two">
+          <div class="field"><label class="lbl" for="pVal">Valor (R$)</label><input id="pVal" data-in="pCalc" inputmode="decimal" autocomplete="off" maxlength="10" placeholder="0"></div>
+          <div class="field"><label class="lbl" for="pObs">Detalhe <span style="text-transform:none;letter-spacing:0">(opcional)</span></label><input id="pObs" autocomplete="off" maxlength="60" placeholder="Ex.: orelha esquerda"></div>
+        </div>
+        <label class="check"><input type="checkbox" id="pDesc" data-chg="pCalc" checked> Desconto de 20% da feira</label>
+      </div>
+      <div class="step">
+        <span class="step-k">3 · Joia</span>
+        <div class="picks" id="pJoiaList" style="max-height:none"></div>
+      </div>
+      <div class="step">
+        <span class="step-k">4 · Pagamento</span>
+        <div class="chips" id="pPay"><button data-act="pPayM" data-v="pix">Pix</button><button data-act="pPayM" data-v="credito">Crédito</button><button data-act="pPayM" data-v="debito">Débito</button><button data-act="pPayM" data-v="dinheiro">Dinheiro</button></div>
+        <div class="field"><span class="lbl">Situação</span><div class="chips" id="pPaid"><button data-act="pPaidS" data-v="1">Pago</button><button data-act="pPaidS" data-v="0">A receber</button></div></div>
+        <div class="split" id="pSplit"></div>
+      </div>
+      <p class="err" id="pErr" hidden></p>
+      <div class="row"><button class="btn hot grow big" id="pGo" data-act="pSave">Colocar na fila</button></div>
+    </div>
+  </section>
+
+  <section class="screen" data-screen="pjoias">
+    <div class="sechead"><h2>Joias</h2><span class="lbl" id="pjInfo"></span></div>
+    <div class="row"><button class="btn hot grow" data-act="jNew">+ Cadastrar joia</button></div>
+    <div id="pjList"></div>
+  </section>
+
+  <section class="screen" data-screen="pvendas">
+    <div class="sechead"><h2>Vendas do piercing</h2></div>
+    <div id="pvBox"></div>
+  </section>
+
   <section class="screen" data-screen="avisos">
     <div class="sechead"><h2>Avisos</h2></div>
     <div id="feed"></div>
@@ -511,12 +565,16 @@ button{-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-sel
 <button class="fab alt" id="askBtn" data-act="askMgr" aria-label="Chamar gerente"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>Chamar gerente</button>
 
 <nav class="tabbar" aria-label="Telas">
-  <button class="tab" data-act="tab" data-tab="bancadas"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg><b class="badge" id="bdg-bancadas" hidden></b></span>Bancadas</button>
-  <button class="tab" data-act="tab" data-tab="fila"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5V5.5h17v2a2.5 2.5 0 0 0 0 5v2a2.5 2.5 0 0 0 0 5v-1.5h-17V17a2.5 2.5 0 0 0 0-5v-1a2.5 2.5 0 0 0 0-3.5z"/></svg><b class="badge" id="bdg-fila" hidden></b></span>Fila</button>
+  <button class="tab" data-act="tab" data-tab="bancadas" data-who="mgr art"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg><b class="badge" id="bdg-bancadas" hidden></b></span>Bancadas</button>
+  <button class="tab" data-act="tab" data-tab="fila" data-who="mgr art"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5V5.5h17v2a2.5 2.5 0 0 0 0 5v2a2.5 2.5 0 0 0 0 5v-1.5h-17V17a2.5 2.5 0 0 0 0-5v-1a2.5 2.5 0 0 0 0-3.5z"/></svg><b class="badge" id="bdg-fila" hidden></b></span>Fila</button>
   <button class="tab" data-act="tab" data-tab="vender" data-who="mgr"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h16l-1.5 12h-13zM8.5 7.5a3.5 3.5 0 0 1 7 0"/></svg></span>Vender</button>
   <button class="tab" data-act="tab" data-tab="flashes" data-who="mgr"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 3.5 6 13.5h5.5l-1 7 7.5-10h-5.5z"/></svg></span>Flashes</button>
   <button class="tab" data-act="tab" data-tab="meu" data-who="art"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="3.5" width="15" height="17"/><path d="M8 8.5h8M8 12.5h8M8 16.5h5"/></svg><b class="badge" id="bdg-meu" hidden></b></span>Meu painel</button>
-  <button class="tab" data-act="tab" data-tab="avisos" data-who="art"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5h4"/></svg><b class="badge" id="bdg-avisos" hidden></b></span>Avisos</button>
+  <button class="tab" data-act="tab" data-tab="pfila" data-who="pier"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01"/></svg><b class="badge" id="bdg-pfila" hidden></b></span>Fila</button>
+  <button class="tab" data-act="tab" data-tab="pnovo" data-who="pier"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>Novo</button>
+  <button class="tab" data-act="tab" data-tab="pjoias" data-who="pier"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10l4 6-9 10L3 10zM3 10h18"/></svg></span>Joias</button>
+  <button class="tab" data-act="tab" data-tab="pvendas" data-who="pier"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16v11H4zM4 10.5h16"/></svg></span>Vendas</button>
+  <button class="tab" data-act="tab" data-tab="avisos" data-who="art pier"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5h4"/></svg><b class="badge" id="bdg-avisos" hidden></b></span>Avisos</button>
   <button class="tab" data-act="tab" data-tab="gerente" data-who="mgr"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l7 3v5c0 4.5-3 7.8-7 9-4-1.2-7-4.5-7-9v-5z"/></svg><b class="badge" id="bdg-gerente" hidden></b></span>Gerente</button>
 </nav>
 
@@ -550,12 +608,13 @@ const S = {
   dismissed: store.get('lido') ? Number(store.get('lido')) : 0,
   sound: false, busy: false,
   cfg: {}, comPadrao: 30, coms: {},
-  flashes: [], sales: [], sale: {flash: null, pay: '', paid: true, valTouched: false, comTouched: false},
+  joias: [], piercings: [], pier: {loc: '', joia: '', pay: '', paid: true}, jPhoto: '', flashes: [], sales: [], sale: {flash: null, pay: '', paid: true, valTouched: false, comTouched: false},
   sellView: 'nova', flArt: '', flQ: '',
   tab: store.get('aba') || 'bancadas', seenFeed: Number(store.get('avisos-visto') || 0)
 };
-const TITLES = {bancadas: 'Bancadas', fila: 'Fila de senhas', meu: 'Meu painel', avisos: 'Avisos', gerente: 'Painel do gerente', vender: 'Vendas', flashes: 'Flashes'};
+const TITLES = {pfila: 'Piercing', pnovo: 'Piercing', pjoias: 'Joias', pvendas: 'Vendas', bancadas: 'Bancadas', fila: 'Fila de senhas', meu: 'Meu painel', avisos: 'Avisos', gerente: 'Painel do gerente', vender: 'Vendas', flashes: 'Flashes'};
 const MGR_TABS = ['gerente', 'vender', 'flashes'];
+const PIER_TABS = ['pfila', 'pnovo', 'pjoias', 'pvendas'];
 
 $('track').textContent = ('Flash Day ★ 07.11 ★ Casa Flamma ★ Viçosa ★ Toda arte deixa um rastro ★ ').repeat(6);
 
@@ -565,6 +624,8 @@ const waiting = () => S.tickets.filter(t => t.status === 'aguardando').sort((a,b
 // Quem não tatua no dia vende o flash e agenda depois: a venda não gera senha.
 const gerentes = () => Array.isArray(S.cfg.gerentes) ? S.cfg.gerentes : [];
 const isMgr = name => !!name && gerentes().includes(name);
+const piercers = () => Array.isArray(S.cfg.piercers) ? S.cfg.piercers : [];
+const isPier = name => !!name && piercers().includes(name);
 const noDay = name => Array.isArray(S.cfg.soAgenda) && S.cfg.soAgenda.includes(name);
 const toBook = v => v.status !== 'cancelada' && !v.senha;
 const onBench = name => S.benches.find(b => (b.status === 'ocupada' || b.status === 'chamado') && b.artista === name);
@@ -585,23 +646,28 @@ function render(){
   $('meBtn').textContent = S.me ? S.me : 'Quem é você?';
   $('meBtn').className = 'chip ' + (S.me ? 'me' : 'on');
   // Quem vende o flash é o gerente: só ele gera senha. O tatuador só chama o gerente.
-  $('sellBtn').hidden = !S.mgr || S.tab === 'vender'; $('askBtn').hidden = S.mgr; $('askBtn').classList.toggle('mini', S.tab === 'meu');
+  $('sellBtn').hidden = !S.mgr || S.tab === 'vender'; $('askBtn').hidden = S.mgr; $('askBtn').classList.toggle('mini', S.tab === 'meu' || isPier(S.me));
   renderTabs();
   renderTakeover(); renderAlerts(); renderSummary(); renderBenches(); renderQueue(); renderFeed(); renderMine();
   if (S.mgr){ renderMgr(); renderSell(); renderFlashes(); }
+  if (isPier(S.me)) renderPier();
   tourPlace();
 }
 
 function renderTabs(){
   if (MGR_TABS.includes(S.tab) && !S.mgr) S.tab = 'bancadas';
+  if (isPier(S.me) && !PIER_TABS.includes(S.tab) && S.tab !== 'avisos') S.tab = 'pfila';
+  if (!isPier(S.me) && PIER_TABS.includes(S.tab)) S.tab = 'bancadas';
   if (S.tab === 'avisos' && S.notes.length && S.notes[0].criadoEm > S.seenFeed){ S.seenFeed = S.notes[0].criadoEm; store.set('avisos-visto', String(S.seenFeed)); }
   document.querySelectorAll('.screen').forEach(el => { el.hidden = el.dataset.screen !== S.tab; });
   document.querySelectorAll('.tab').forEach(el => { const on = el.dataset.tab === S.tab; el.classList.toggle('on', on); el.setAttribute('aria-current', on ? 'page' : 'false'); });
-  document.querySelectorAll('.tab[data-who]').forEach(el => { el.hidden = (el.dataset.who === 'mgr') !== S.mgr; });
+  const role = S.mgr ? 'mgr' : isPier(S.me) ? 'pier' : 'art';
+  document.querySelectorAll('.tab[data-who]').forEach(el => { el.hidden = !el.dataset.who.split(' ').includes(role); });
   $('screenTitle').textContent = TITLES[S.tab];
   const badge = (id, n, dot) => { const el = $('bdg-' + id); el.hidden = !n; el.classList.toggle('dot', !!dot); el.textContent = dot ? '' : (n > 99 ? '99+' : n); };
   badge('bancadas', S.me && S.benches.some(b => b.artista === S.me && b.status === 'chamado') ? 1 : 0, true);
   badge('fila', waiting().length);
+  badge('pfila', S.piercings.filter(p => p.status === 'espera').length);
   badge('meu', S.me ? S.tickets.filter(t => t.artista === S.me && t.status === 'aguardando').length : 0);
   badge('avisos', S.notes.filter(n => n.criadoEm > S.seenFeed && (n.tipo === 'aviso' ? (!n.para || n.para === S.me) : S.mgr || n.de === S.me)).length);
   badge('gerente', S.notes.filter(n => n.tipo === 'pedido' && !n.resolvido).length);
@@ -642,7 +708,7 @@ function renderAlerts(){
   if (S.mgr && (home || S.tab === 'gerente')){
     S.notes.filter(n => n.tipo === 'pedido' && !n.resolvido).slice(0,3).forEach(n => out.push(`<div class="banner pink"><div class="t"><b>${esc(n.de || 'Alguém')} chamou · ${hhmm(n.criadoEm)}</b><br>${esc(n.texto)}</div><button data-act="resolve" data-id="${n.id}">Resolvido</button></div>`));
   }
-  if (!S.sound && S.ready) out.push(`<div class="banner calm"><div class="t">Ative o som para ouvir quando chamarem sua senha. Deixe esta tela aberta.</div><button data-act="sound">Ativar som</button></div>`);
+  if (!S.sound && S.ready && !isPier(S.me)) out.push(`<div class="banner calm"><div class="t">Ative o som para ouvir quando chamarem sua senha. Deixe esta tela aberta.</div><button data-act="sound">Ativar som</button></div>`);
   $('alerts').innerHTML = out.join('');
   $('alerts').hidden = !out.length;
 }
@@ -954,6 +1020,7 @@ function renderSellDay(){
     ${byPay.length ? `<div class="group"><h3>Por forma de pagamento</h3><div class="pays">${byPay.map(x => `<div><span class="lbl">${PAY[x.k]}</span><b class="num">${brl(x.t)}</b><small>${x.n} venda${x.n === 1 ? '' : 's'}</small></div>`).join('')}</div></div>` : ''}
     <div class="group"><h3>Por artista<button class="btn ghost sm" data-act="editComs">Comissões</button></h3>
       ${artRows.length ? `<div class="arts">${artRows.map(([a, x]) => `<div><span>${esc(a)}</span><span class="num">${x.n}×</span><b class="num">${brl(x.t)}</b><em class="num">Estúdio ${brl(round2(x.st))} · artista ${brl(round2(x.t - x.st))}</em>${x.open ? `<small class="num">${brl(x.open)} a receber</small>` : '<small></small>'}</div>`).join('')}</div>` : '<p class="hint">Nenhuma venda ainda.</p>'}</div>
+    ${pierSummary()}
     <div class="group"><h3>Vendas · mais recentes primeiro</h3>
       ${list.length ? `<div class="sales">${list.map(row).join('')}</div>` : '<div class="empty-box">Nenhuma venda ainda. Use <b>Nova venda</b> pra registrar a primeira.</div>'}</div>
     ${canc.length ? `<details class="group"><summary>Canceladas · ${canc.length}</summary><div class="sales">${canc.map(row).join('')}</div></details>` : ''}`;
@@ -1189,7 +1256,7 @@ function toast(msg){
 const artistOptions = sel => S.artists.map(a => `<option ${a === sel ? 'selected' : ''}>${esc(a)}</option>`).join('');
 
 const norm = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-const profiles = () => gerentes().concat(S.artists);
+const profiles = () => gerentes().concat(piercers(), S.artists);
 const nameHits = q => { const k = norm(q); return k ? profiles().filter(n => norm(n).startsWith(k) || norm(n).split(/\s+/).some(w => w.startsWith(k))) : []; };
 const closeLogin = () => { $('loginRoot').innerHTML = ''; };
 function whoSheet(){
@@ -1295,18 +1362,87 @@ function myPinSheet(n, h, first){
 }
 function artistPinsSheet(){
   sheet(`<h4>PIN de alguém</h4><p class="hint">Pra quem esqueceu o PIN ou entrou na lista agora. Ao trocar, a pessoa sai do app e entra com o novo.</p>
-    <div class="field"><label class="lbl" for="apA">Artista</label><select id="apA">${gerentes().concat(S.artists).map(a => `<option>${esc(a)}</option>`).join('')}</select></div>
+    <div class="field"><label class="lbl" for="apA">Artista</label><select id="apA">${profiles().map(a => `<option>${esc(a)}</option>`).join('')}</select></div>
     <div class="field"><label class="lbl" for="apP">Novo PIN</label><input id="apP" type="password" inputmode="numeric" autocomplete="new-password" maxlength="6"></div>
     <p class="err" id="apErr" hidden></p>
     <div class="row"><button class="btn hot grow" data-act="saveArtPin">Salvar</button><button class="btn ghost" data-act="close">Cancelar</button></div>`);
 }
 
+/* ---------- piercing ---------- */
+const P_LOCAIS = ['Lóbulo', 'Helix', 'Tragus', 'Conch', 'Nariz', 'Septo', 'Sobrancelha', 'Labret', 'Umbigo', 'Outro'];
+const P_COM = 15, P_DESC = 20; // estúdio: 15% só da perfuração, já com desconto. Joia fica toda com a piercer.
+const pAtivos = () => S.piercings.filter(p => p.status !== 'cancelado');
+const pSoma = (l, k) => round2(l.reduce((t, p) => t + (Number(p[k]) || 0), 0));
+function pConta(){
+  const bruto = money($('pVal').value), desc = $('pDesc').checked ? round2(bruto * P_DESC / 100) : 0, perf = round2(bruto - desc);
+  const j = S.pier.joia && S.joias.find(x => x.id === S.pier.joia), joia = j ? Number(j.preco) || 0 : 0;
+  const estudio = round2(perf * P_COM / 100), total = round2(perf + joia);
+  return {bruto, desc, perf, j, joia, estudio, total, piercer: round2(total - estudio)};
+}
+const jEsgotada = j => typeof j.qtd === 'number' && j.qtd <= 0;
+function pDraw(id, html){ const el = $(id); if (el.dataset.h !== html){ el.innerHTML = html; el.dataset.h = html; } }
+function pRow(p, now){
+  const tel = phoneDigits(p.contato), msg = encodeURIComponent('Oi, ' + (p.cliente || '').split(' ')[0] + '! Chegou a sua vez no piercing da Rastro.');
+  const quando = hhmm(p.criadoEm) + (now ? ' · começou ' + hhmm(p.inicio) : '');
+  return `<div class="sold"><div class="sold-h" style="grid-template-columns:56px minmax(0,1fr)"><span class="sold-ph num">P${esc(pad(p.num))}</span>
+    <span class="sold-t"><b>${esc(p.cliente)}</b><span>${esc(p.local)}${p.obs ? ' · ' + esc(p.obs) : ''}${p.joiaNome ? ' · ' + esc(p.joiaNome) : ''}</span><span class="num">${quando} · ${brl(p.total)}${p.pago ? '' : ' · a receber'}</span></span></div>
+    <div class="sold-b"><div class="sold-x">${now ? `<button class="btn hot" data-act="pDone" data-id="${p.id}">Terminei</button>` : `<button class="btn hot" data-act="pCall" data-id="${p.id}">Chamar</button>`}${tel ? `<a class="btn wa" href="https://wa.me/${tel}?text=${msg}" target="_blank" rel="noopener">WhatsApp</a>` : ''}<button class="btn ghost sm" data-act="pCancel" data-id="${p.id}">Cancelar</button></div></div></div>`;
+}
+function renderPier(){
+  const fila = S.piercings.filter(p => p.status === 'espera').sort((a, b) => a.criadoEm - b.criadoEm), agora = S.piercings.filter(p => p.status === 'atendendo');
+  $('pfInfo').textContent = fila.length ? fila.length + ' esperando' : '';
+  pDraw('pfNow', agora.length ? `<div class="group"><h3>Atendendo agora</h3><div class="sold-list">${agora.map(p => pRow(p, true)).join('')}</div></div>` : '');
+  pDraw('pfList', fila.length ? `<div class="group"><h3>Esperando</h3><div class="sold-list">${fila.map(p => pRow(p)).join('')}</div></div>` : (agora.length ? '' : '<div class="empty-box">Ninguém na fila. Toque em <b>Novo</b> pra registrar o primeiro atendimento.</div>'));
+  pDraw('pLoc', P_LOCAIS.map(l => `<button class="${S.pier.loc === l ? 'on' : ''}" data-act="pLocal" data-v="${l}">${l}</button>`).join(''));
+  const joias = S.joias.filter(j => j.ativo !== false);
+  pDraw('pJoiaList', `<button class="pick" data-act="pJoia" data-v="" style="${S.pier.joia ? '' : 'background:var(--yellow)'}"><span class="sold-ph">–</span><span class="pk-b"><b>Sem joia</b></span><span></span></button>` + joias.map(j => { const off = jEsgotada(j); return `<button class="pick" data-act="pJoia" data-v="${j.id}" ${off ? 'disabled' : ''} style="${off ? 'opacity:.5;' : ''}${S.pier.joia === j.id ? 'background:var(--yellow)' : ''}">${j.foto ? flImg(j, false) : '<span class="sold-ph">◇</span>'}<span class="pk-b"><b>${esc(j.nome)}</b><span>${off ? 'Esgotada' : typeof j.qtd === 'number' ? j.qtd + ' em estoque' : ''}</span></span><span class="num">${brl(j.preco)}</span></button>`; }).join(''));
+  document.querySelectorAll('#pPay button').forEach(b => b.classList.toggle('on', b.dataset.v === S.pier.pay));
+  document.querySelectorAll('#pPaid button').forEach(b => b.classList.toggle('on', (b.dataset.v === '1') === S.pier.paid));
+  const c = pConta();
+  pDraw('pSplit', c.total ? `<div><span class="lbl">Perfuração${c.desc ? ' −20%' : ''}</span><b class="num">${brl(c.perf)}</b></div><div><span class="lbl">Joia</span><b class="num">${brl(c.joia)}</b></div><div><span class="lbl">Total</span><b class="num">${brl(c.total)}</b></div>` : '');
+  $('pGo').textContent = c.total ? 'Colocar na fila · ' + brl(c.total) : 'Colocar na fila';
+  $('pjInfo').textContent = S.joias.length ? S.joias.length + (S.joias.length === 1 ? ' cadastrada' : ' cadastradas') : '';
+  pDraw('pjList', S.joias.length ? `<div class="fls">${S.joias.map(j => `<div class="fl ${jEsgotada(j) || j.ativo === false ? 'sold' : ''}">${flImg(j)}<div class="fl-n">${esc(j.nome)}</div><div class="job-t num">${brl(j.preco)}${typeof j.qtd === 'number' ? ' · ' + (j.qtd > 0 ? j.qtd + ' em estoque' : 'esgotada') : ''}</div><div class="job-x"><button class="btn ghost sm" data-act="jEdit" data-id="${j.id}">Editar</button></div></div>`).join('')}</div>` : '<div class="empty-box">Nenhuma joia ainda. Toque em <b>+ Cadastrar joia</b>.</div>');
+  const l = pAtivos(), total = pSoma(l, 'total'), est = pSoma(l, 'estudio'), aberto = pSoma(l.filter(p => !p.pago), 'total');
+  const byPay = Object.keys(PAY).map(k => ({k, l: l.filter(p => p.pagamento === k)})).filter(x => x.l.length);
+  pDraw('pvBox', `<div class="me-money"><div><span class="lbl">Fica com você</span><strong class="num">${brl(round2(total - est))}</strong></div><small class="num">de ${brl(total)} · estúdio ${brl(est)}</small></div>
+    <div class="board cash"><div class="busy"><strong class="num">${l.length}</strong><span class="lbl">Atendimentos</span></div><div class="q"><strong class="num">${brl(aberto)}</strong><span class="lbl">A receber</span></div></div>
+    ${byPay.length ? `<div class="group"><h3>Por forma de pagamento</h3><div class="pays">${byPay.map(x => `<div><span class="lbl">${PAY[x.k]}</span><b class="num">${brl(pSoma(x.l, 'total'))}</b><small>${x.l.length}×</small></div>`).join('')}</div></div>` : ''}
+    <div class="group"><h3>Atendimentos</h3>${l.length ? `<div class="sales">${l.map(p => `<div class="sale-row"><div class="sr-n num">P${esc(pad(p.num))}<small>${hhmm(p.criadoEm)}</small></div><div class="sr-b"><b>${esc(p.cliente)}</b><span>${esc(p.local)}${p.joiaNome ? ' · ' + esc(p.joiaNome) : ''}</span><span class="tags"><span class="tag">${PAY[p.pagamento] || ''}</span><span class="tag">${{espera: 'Na fila', atendendo: 'Atendendo', feito: 'Feito'}[p.status] || ''}</span>${p.pago ? '' : '<span class="tag due">A receber</span>'}</span></div><div class="sr-v num">${brl(p.total)}</div>${p.pago ? '' : `<div class="sr-x"><button class="btn sm" data-act="pPago" data-id="${p.id}">Marcar pago</button></div>`}</div>`).join('')}</div>` : '<p class="hint">Nenhum atendimento ainda.</p>'}</div>`);
+}
+function pierSummary(){
+  const l = pAtivos(); if (!l.length) return '';
+  const total = pSoma(l, 'total'), est = pSoma(l, 'estudio');
+  return `<div class="group"><h3>Piercing</h3><div class="arts"><div><span>${esc(piercers()[0] || 'Piercing')}</span><span class="num">${l.length}×</span><b class="num">${brl(total)}</b><em class="num">Estúdio ${brl(est)} · ${esc(piercers()[0] || 'piercer')} ${brl(round2(total - est))}</em></div></div></div>`;
+}
+const jPicDraw = () => { const b = $('jPic'); if (!b) return; b.innerHTML = S.jUp ? '<p class="hint">Enviando a foto…</p>' : `${S.jPhoto ? flImg({foto: S.jPhoto}) : ''}<div class="row"><label class="btn">${S.jPhoto ? 'Trocar foto' : 'Tirar ou escolher foto'}<input type="file" accept="image/*" data-chg="jFile" hidden></label>${S.jPhoto ? '<button class="btn ghost" data-act="jNoPhoto">Remover</button>' : ''}</div>`; };
+function joiaSheet(id){
+  const j = id ? S.joias.find(x => x.id === id) : null;
+  S.jPhoto = j ? j.foto || '' : ''; S.jUp = false;
+  sheet(`<h4>${j ? 'Editar joia' : 'Cadastrar joia'}</h4>
+    <div class="field"><label class="lbl" for="jN">Nome</label><input id="jN" autocomplete="off" maxlength="60" value="${esc(j ? j.nome : '')}" placeholder="Ex.: argola de titânio 8 mm"></div>
+    <div class="two"><div class="field"><label class="lbl" for="jP">Preço (R$)</label><input id="jP" inputmode="decimal" autocomplete="off" maxlength="10" value="${j && j.preco ? String(j.preco).replace('.', ',') : ''}"></div>
+    <div class="field"><label class="lbl" for="jQ">Estoque <span style="text-transform:none;letter-spacing:0">(opcional)</span></label><input id="jQ" inputmode="numeric" autocomplete="off" maxlength="4" value="${j && typeof j.qtd === 'number' ? j.qtd : ''}"></div></div>
+    <div class="field"><span class="lbl">Foto <span style="text-transform:none;letter-spacing:0">(opcional)</span></span><div class="fl-pic" id="jPic"></div></div>
+    <p class="err" id="jErr" hidden></p>
+    <div class="row"><button class="btn hot grow" data-act="jSave" data-id="${j ? j.id : ''}">Salvar</button>${j ? `<button class="btn ghost" data-act="jDel" data-id="${j.id}">Excluir</button>` : ''}<button class="btn ghost" data-act="close">Cancelar</button></div>`);
+  jPicDraw();
+}
+
 /* ---------- tour guiado do primeiro acesso ---------- */
-const tutKind = () => S.mgr ? 'mgr' : 'art';
+const tutKind = () => S.mgr ? 'mgr' : isPier(S.me) ? 'pier' : 'art';
 const tabBtn = t => `.tab[data-tab="${t}"]`;
 function tourSteps(k){
   const rest = S.descanso ? ` e você descansa ${S.descanso} min antes da sua próxima` : '';
-  const help = {tab: 'bancadas', sel: '[data-act="help"]', t: 'Quer rever?', x: 'Toque no <b>?</b> quando quiser e o tour começa de novo.'};
+  const help = {sel: '[data-act="help"]', t: 'Quer rever?', x: 'Toque no <b>?</b> quando quiser e o tour começa de novo.'};
+  if (k === 'pier') return [
+    {tab: 'pfila', t: 'Oi, ' + esc(S.me) + '!', x: 'Este é o seu painel de piercing. Vou te mostrar rapidinho.'},
+    {tab: 'pjoias', sel: tabBtn('pjoias'), t: 'Joias', x: 'Comece aqui: cadastre as joias com preço, estoque e foto.'},
+    {tab: 'pnovo', sel: tabBtn('pnovo'), t: 'Novo atendimento', x: 'Registre o cliente, confira o documento, escolha a perfuração, a joia e o pagamento. O desconto de 20% entra sozinho.'},
+    {tab: 'pfila', sel: tabBtn('pfila'), t: 'Fila', x: 'Toque em <b>Chamar</b> pra atender e em <b>Terminei</b> ao acabar.'},
+    {tab: 'pvendas', sel: tabBtn('pvendas'), t: 'Vendas', x: 'Seu total, o que falta receber e a parte do estúdio: 15% só da perfuração.'},
+    help
+  ];
   if (k === 'art' && noDay(S.me)) return [
     {tab: 'bancadas', t: 'Oi, ' + esc(S.me) + '!', x: 'No dia você vende seus flashes e tatua depois, agendado. Vou te mostrar onde acompanhar.'},
     {tab: 'meu', sel: tabBtn('meu'), t: 'Meu painel', x: 'Cada arte vendida aparece aqui. Toque nela pra ver o contato do cliente e marcar <b>Já agendei</b>.'},
@@ -1488,6 +1624,61 @@ const act = {
     return guard(async () => { await patchPin(a, h, false); closeSheet(); toast('PIN de ' + a + ' salvo.'); });
   },
   help(){ if (S.me) tourStart(tutKind()); else whoSheet(); },
+  pLocal(el){ S.pier.loc = el.dataset.v; render(); },
+  pJoia(el){ S.pier.joia = el.dataset.v; render(); },
+  pPayM(el){ S.pier.pay = el.dataset.v; render(); },
+  pPaidS(el){ S.pier.paid = el.dataset.v === '1'; render(); },
+  pCalc(){ render(); },
+  pSave(){
+    const err = $('pErr'); const fail = m => { err.textContent = m; err.hidden = false; };
+    const cliente = $('pCli').value.trim(), contato = $('pTel').value.trim(), obs = $('pObs').value.trim(), c = pConta();
+    if (!cliente) return fail('Coloque o nome do cliente.');
+    if (!$('pDoc').checked) return fail('Confira o documento com foto antes: só 18+.');
+    if (!S.pier.loc) return fail('Escolha o local da perfuração.');
+    if (!c.bruto) return fail('Coloque o valor da perfuração.');
+    if (!S.pier.pay) return fail('Escolha a forma de pagamento.');
+    err.hidden = true;
+    return guard(async () => {
+      const num = await nextNumber('piercing');
+      await S.db.collection('piercings').add({num, cliente, contato, obs, doc: true, local: S.pier.loc, bruto: c.bruto, desconto: c.desc, perfuracao: c.perf, joiaId: c.j ? c.j.id : '', joiaNome: c.j ? c.j.nome : '', joiaPreco: c.joia, total: c.total, estudio: c.estudio, piercer: c.piercer, pagamento: S.pier.pay, pago: S.pier.paid, status: 'espera', criadoEm: Date.now(), por: S.me || ''});
+      if (c.j && typeof c.j.qtd === 'number') await S.db.doc('joias/' + c.j.id).update({qtd: Math.max(0, c.j.qtd - 1)});
+      S.pier = {loc: '', joia: '', pay: '', paid: true};
+      ['pCli', 'pTel', 'pVal', 'pObs'].forEach(id => { $(id).value = ''; }); $('pDoc').checked = false; $('pDesc').checked = true;
+      S.tab = 'pfila'; render(); window.scrollTo({top: 0, behavior: 'instant'}); toast('Atendimento na fila.');
+    });
+  },
+  pCall(el){ return guard(async () => { await S.db.doc('piercings/' + el.dataset.id).update({status: 'atendendo', inicio: Date.now()}); }); },
+  pDone(el){ return guard(async () => { await S.db.doc('piercings/' + el.dataset.id).update({status: 'feito', fim: Date.now()}); toast('Feito!'); }); },
+  pPago(el){ return guard(async () => { await S.db.doc('piercings/' + el.dataset.id).update({pago: true}); toast('Marcado como pago.'); }); },
+  pCancel(el){
+    const p = S.piercings.find(x => x.id === el.dataset.id); if (!p) return;
+    sheet(`<h4>Cancelar o atendimento de ${esc(p.cliente)}?</h4><p class="hint">Sai da fila e das vendas.${p.joiaNome ? ' A joia volta pro estoque.' : ''}</p><div class="row"><button class="btn hot grow" data-act="pCancelOk" data-id="${p.id}">Sim, cancelar</button><button class="btn ghost" data-act="close">Voltar</button></div>`);
+  },
+  pCancelOk(el){ return guard(async () => {
+    const p = S.piercings.find(x => x.id === el.dataset.id); if (!p) return;
+    await S.db.doc('piercings/' + p.id).update({status: 'cancelado', fim: Date.now()});
+    const j = p.joiaId && S.joias.find(x => x.id === p.joiaId);
+    if (j && typeof j.qtd === 'number') await S.db.doc('joias/' + j.id).update({qtd: j.qtd + 1});
+    closeSheet(); toast('Atendimento cancelado.');
+  }); },
+  jNew(){ joiaSheet(); },
+  jEdit(el){ joiaSheet(el.dataset.id); },
+  async jFile(el){
+    const file = el.files && el.files[0]; if (!file || !S.assets) return;
+    S.jUp = true; jPicDraw();
+    try { const r = await S.assets.upload(await shrink(file)); S.jPhoto = r.id; } catch(e){ toast('Não deu pra enviar a foto. Tente de novo.'); }
+    S.jUp = false; jPicDraw();
+  },
+  jNoPhoto(){ S.jPhoto = ''; jPicDraw(); },
+  jSave(el){
+    const err = $('jErr'); const fail = m => { err.textContent = m; err.hidden = false; };
+    if (S.jUp) return fail('Espere a foto terminar de enviar.');
+    const nome = $('jN').value.trim(), preco = money($('jP').value), q = $('jQ').value.trim();
+    if (!nome) return fail('Coloque o nome da joia.');
+    const data = {nome, preco, foto: S.jPhoto || '', ativo: true, qtd: q === '' ? null : Math.max(0, parseInt(q, 10) || 0)};
+    return guard(async () => { const id = el.dataset.id; if (id) await S.db.doc('joias/' + id).update(data); else await S.db.collection('joias').add(Object.assign({criadoEm: Date.now()}, data)); closeSheet(); toast('Joia salva.'); });
+  },
+  jDel(el){ return guard(async () => { await S.db.doc('joias/' + el.dataset.id).delete(); closeSheet(); toast('Joia excluída.'); }); },
   tourNext(){ S.tour.i++; tourShow(); },
   tourBack(){ S.tour.i--; tourShow(); },
   tourEnd,
@@ -1653,13 +1844,15 @@ const act = {
   saveArtists(){ const list = [...new Set($('arT').value.split('\n').map(s => s.trim()).filter(Boolean))];
     return guard(async () => { await saveConfig({artistas: list}); closeSheet(); toast('Lista salva.'); }); },
   resetDay(){
-    sheet(`<h4>Zerar o dia?</h4><p class="hint">Apaga todas as senhas, vendas e avisos, libera todas as bancadas e volta a contagem pra 001. Os flashes cadastrados, a lista de tatuadores, o descanso e as bancadas ficam.</p>
+    sheet(`<h4>Zerar o dia?</h4><p class="hint">Apaga todas as senhas, vendas, atendimentos de piercing e avisos, libera todas as bancadas e volta a contagem pra 001. Os flashes cadastrados, a lista de tatuadores, o descanso e as bancadas ficam.</p>
       <div class="row"><button class="btn hot grow" data-act="confirmReset">Sim, zerar tudo</button><button class="btn ghost" data-act="close">Cancelar</button></div>`);
   },
   confirmReset(){ return guard(async () => {
     for (const t of S.tickets) await S.db.doc('senhas/' + t.id).delete();
     for (const n of S.notes) await S.db.doc('avisos/' + n.id).delete();
     for (const v of S.sales) await S.db.doc('vendas/' + v.id).delete();
+    for (const p of S.piercings) await S.db.doc('piercings/' + p.id).delete();
+    await S.db.doc('contador/piercing').set({n: 0});
     await S.db.doc('contador/vendas').set({n: 0});
     for (const b of S.benches) await S.db.doc('bancadas/' + b.id).set(Object.assign(blankBench(b.num), {nome: b.nome || ''}));
     await S.db.doc('contador/senhas').set({n: 0});
@@ -1713,7 +1906,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && $('sheetRoot').innerHTML) closeSheet();
   if (e.key === 'Enter' && e.target.id === 'avTxt') act.sendNote();
   if (e.key === 'Enter' && e.target.id === 'lgName'){ if (S.owner) doLogin(); else $('lgPin').focus(); }
-  if (e.key === 'Enter' && e.target.id === 'lgPin') doLogin();
+  if (e.key === 'Enter' && e.target.id === 'lgPin'){ e.preventDefault(); doLogin(); }
 });
 
 /* ---------- som ---------- */
@@ -1780,13 +1973,15 @@ async function boot(){
   if (user){ try { S.owner = !!(await user.isOwner()); } catch(e){} }
   if (S.owner && $('lgPinW')) $('lgPinW').hidden = true;
   if (user){ try { const w = await user.can('data.write'); if (w === false){ S.readOnly = true; $('footnote').textContent = 'Você está vendo em modo leitura. Para mexer nas bancadas, peça ao Diego acesso de edição.'; } } catch(e){} }
-  let got = 0; const mark = () => { if (++got >= 6 && !S.ready){ S.ready = true; } };
+  let got = 0; const mark = () => { if (++got >= 8 && !S.ready){ S.ready = true; } };
   const onErr = () => setSync('Conexão caiu · recarregue a página', false);
   db.collection('bancadas').orderBy('num').onSnapshot(s => { S.benches = s.docs.map(d => Object.assign({id: d.id}, d.data())); mark(); afterSnap(); }, onErr);
   db.collection('senhas').orderBy('ordem').onSnapshot(s => { S.tickets = s.docs.map(d => Object.assign({id: d.id}, d.data())); mark(); afterSnap(); }, onErr);
   db.collection('avisos').orderBy('criadoEm', 'desc').limit(40).onSnapshot(s => { S.notes = s.docs.map(d => Object.assign({id: d.id}, d.data())); mark(); afterSnap(); }, onErr);
   db.collection('flashes').orderBy('codigo').onSnapshot(s => { S.flashes = s.docs.map(d => Object.assign({id: d.id}, d.data())); mark(); afterSnap(); }, onErr);
   db.collection('vendas').orderBy('criadaEm', 'desc').onSnapshot(s => { S.sales = s.docs.map(d => Object.assign({id: d.id}, d.data())); mark(); afterSnap(); }, onErr);
+  db.collection('joias').orderBy('nome').onSnapshot(s => { S.joias = s.docs.map(d => Object.assign({id: d.id}, d.data())); mark(); afterSnap(); }, onErr);
+  db.collection('piercings').orderBy('criadoEm', 'desc').onSnapshot(s => { S.piercings = s.docs.map(d => Object.assign({id: d.id}, d.data())); mark(); afterSnap(); }, onErr);
   db.doc('config/geral').onSnapshot(s => {
     const d = s.exists ? s.data() : {};
     S.artists = Array.isArray(d.artistas) ? d.artistas.slice() : [];
@@ -1794,7 +1989,7 @@ async function boot(){
     S.cfg = d;
     S.comPadrao = typeof d.comissaoPadrao === 'number' ? d.comissaoPadrao : 30;
     S.coms = d.comissoes && typeof d.comissoes === 'object' ? d.comissoes : {};
-    if (S.me && !S.artists.includes(S.me) && !(d.gerentes || []).includes(S.me)){ S.me = null; store.set('eu', null); store.set('eu-pin', null); } // perfil que saiu da lista
+    if (S.me && !S.artists.includes(S.me) && !(d.gerentes || []).includes(S.me) && !(d.piercers || []).includes(S.me)){ S.me = null; store.set('eu', null); store.set('eu-pin', null); } // perfil que saiu da lista
     if (S.me && !S.owner && store.get('eu-pin') !== (d.pinsArtistas || {})[S.me]){ S.me = null; store.set('eu', null); store.set('eu-pin', null); }
     S.mgr = isMgr(S.me);
     mark(); afterSnap();
