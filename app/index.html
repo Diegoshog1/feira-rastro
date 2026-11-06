@@ -370,6 +370,12 @@ body::before{background:var(--pink)}
 .chip{border-color:var(--ink);color:var(--ink);background:var(--on-pink)}
 .chip.me{background:var(--ink);border-color:var(--ink);color:var(--on-band)}
 .chip.on{background:var(--yellow);border-color:var(--ink);color:var(--on-yellow)}
+/* iPhone: às vezes a tela "solta" os elementos fixos (depois do teclado ou de rolar rápido).
+   --vb e --vt corrigem a posição pelo que está visível de verdade. */
+.tabbar{transform:translateY(var(--vb,0px))}
+.fab{transform:translateY(var(--vb,0px))}
+body::before{transform:translateY(var(--vt,0px))}
+@media (min-width:900px){.tabbar{transform:translateX(-50%) translateY(var(--vb,0px))}}
 /* tela de login */
 .login{position:fixed;inset:0;z-index:38;overflow:auto;background-color:var(--pink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:calc(24px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px))}
 .login-logo{width:100%;max-width:380px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
@@ -612,6 +618,24 @@ const store = {
   get(k){ let v = null; try { v = localStorage.getItem('rastro-' + k); } catch(e){} return v == null && KEEP.includes(k) ? cookieGet(k) : v; },
   set(k, v){ try { v == null ? localStorage.removeItem('rastro-' + k) : localStorage.setItem('rastro-' + k, v); } catch(e){} if (KEEP.includes(k)) cookieSet(k, v); }
 };
+(function fixViewport(){
+  const vv = window.visualViewport; if (!vv) return;
+  const root = document.documentElement;
+  let raf = 0;
+  const fix = () => { raf = 0;
+    const kb = vv.height < window.innerHeight * 0.75; // teclado aberto: deixa como está
+    const vb = kb ? 0 : Math.round(vv.offsetTop + vv.height - window.innerHeight);
+    const vt = kb ? 0 : Math.round(vv.offsetTop);
+    root.style.setProperty('--vb', vb + 'px'); root.style.setProperty('--vt', vt + 'px');
+  };
+  const later = () => { if (!raf) raf = requestAnimationFrame(fix); };
+  vv.addEventListener('resize', later); vv.addEventListener('scroll', later);
+  addEventListener('scroll', later, {passive: true});
+  addEventListener('orientationchange', () => setTimeout(fix, 300));
+  // ao fechar o teclado, o iPhone demora pra devolver a tela: confere de novo
+  document.addEventListener('focusout', () => { setTimeout(fix, 60); setTimeout(fix, 350); });
+  fix();
+})();
 try { navigator.storage && navigator.storage.persist && navigator.storage.persist().catch(() => {}); } catch(e){}
 const hhmm = t => { const d = new Date(t); return two(d.getHours()) + ':' + two(d.getMinutes()); };
 const mins = t => Math.max(0, Math.round((Date.now() - t) / 60000));
