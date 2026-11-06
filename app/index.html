@@ -636,7 +636,7 @@ const PIER_TABS = ['pfila', 'pnovo', 'pjoias', 'pvendas'];
 $('track').textContent = ('Flash Day ★ 07.11 ★ Casa Flamma ★ Viçosa ★ Toda arte deixa um rastro ★ ').repeat(6);
 
 /* ---------- dados derivados ---------- */
-const benchName = b => b.nome || ('Bancada ' + two(b.num));
+const benchName = b => 'Bancada ' + two(b.num) + (b.nome ? ' · ' + b.nome : '');
 const waiting = () => S.tickets.filter(t => t.status === 'aguardando').sort((a,b) => (a.ordem||0) - (b.ordem||0));
 // Quem não tatua no dia vende o flash e agenda depois: a venda não gera senha.
 const gerentes = () => Array.isArray(S.cfg.gerentes) ? S.cfg.gerentes : [];
