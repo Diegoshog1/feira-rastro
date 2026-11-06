@@ -450,7 +450,7 @@ button{-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-sel
     <div id="sellNew" class="sale">
       <div class="step">
         <span class="step-k">1 · Código do flash</span>
-        <div class="code-row"><input id="sCode" data-in="saleCode" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="000" aria-label="Código do flash"><button class="btn" data-act="pickFlash">Procurar</button></div>
+        <div class="code-row"><input id="sCode" data-in="saleCode" autocapitalize="characters" autocomplete="off" maxlength="8" placeholder="JZ001" aria-label="Código do flash"><button class="btn" data-act="pickFlash">Procurar</button></div>
         <div id="sMatch"></div>
       </div>
       <div class="step">
@@ -1166,7 +1166,7 @@ function flashSheet(id, artist){
   sheet(`<h4>${f ? 'Editar flash ' + esc(f.codigo) : 'Cadastrar flash'}</h4>
     <div class="field"><label class="lbl" for="flA">Artista</label><select id="flA"><option value="" disabled ${(f ? f.artista : artist) ? '' : 'selected'}>Escolha</option>${artistOptions(f ? f.artista : artist)}</select></div>
     <div class="two">
-      <div class="field"><label class="lbl" for="flC">Código da etiqueta</label><input id="flC" inputmode="numeric" autocomplete="off" maxlength="8" value="${esc(f ? f.codigo : nextCode())}" ${sold ? 'disabled' : ''}></div>
+      <div class="field"><label class="lbl" for="flC">Código da etiqueta</label><input id="flC" autocapitalize="characters" autocomplete="off" maxlength="8" value="${esc(f ? f.codigo : nextCode())}" ${sold ? 'disabled' : ''}></div>
       <div class="field"><label class="lbl" for="flP">Preço (R$)</label><input id="flP" inputmode="decimal" autocomplete="off" maxlength="10" value="${f && f.preco ? String(f.preco).replace('.', ',') : ''}" placeholder="200"></div>
     </div>
     <div class="field"><label class="lbl" for="flN">Nome ou descrição</label><input id="flN" autocomplete="off" maxlength="60" value="${esc(f ? f.nome : '')}" placeholder="Ex.: corvo com lua"></div>
