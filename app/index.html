@@ -476,6 +476,7 @@ body::before{background:var(--pink)}
         <div class="chips" id="sPay">
           <button data-act="payMethod" data-v="pix">Pix</button><button data-act="payMethod" data-v="credito">Crédito</button><button data-act="payMethod" data-v="debito">Débito</button><button data-act="payMethod" data-v="dinheiro">Dinheiro</button>
         </div>
+        <div class="field" id="sCardW" hidden><label class="lbl" for="sCard">Nome no cartão</label><input id="sCard" autocomplete="off" autocapitalize="characters" maxlength="60" placeholder="Como está no cartão"></div>
         <div class="two">
           <div class="field"><label class="lbl" for="sVal">Valor (R$)</label><input id="sVal" data-in="saleVal" inputmode="decimal" autocomplete="off" maxlength="10" placeholder="0"></div>
           <div class="field"><label class="lbl" for="sCom">Comissão do estúdio (%)</label><input id="sCom" data-in="saleCom" inputmode="decimal" autocomplete="off" maxlength="5" placeholder="30"></div>
@@ -973,7 +974,7 @@ function artistNow(name){
 function syncCode(){ const L = $('sL').value, N = $('sN').value; $('sCode').value = L + (N ? N.padStart(3, '0') : ''); act.saleCode($('sCode')); }
 function resetSale(){
   S.sale = {flash: null, pay: '', paid: true, valTouched: false, comTouched: false};
-  ['sCode', 'sL', 'sN', 'sCli', 'sTel', 'sIg', 'sVal', 'sCom', 'sObs'].forEach(id => { $(id).value = ''; });
+  ['sCode', 'sL', 'sN', 'sCli', 'sTel', 'sIg', 'sVal', 'sCom', 'sObs', 'sCard'].forEach(id => { $(id).value = ''; });
   $('sErr').hidden = true;
   renderSell();
 }
@@ -1002,6 +1003,7 @@ function renderSell(){
   }
   if ($('sMatch').dataset.h !== html){ $('sMatch').innerHTML = html; $('sMatch').dataset.h = html; }
   document.querySelectorAll('#sPay button').forEach(b => b.classList.toggle('on', b.dataset.v === S.sale.pay));
+  $('sCardW').hidden = !['credito', 'debito'].includes(S.sale.pay);
   document.querySelectorAll('#sPaid button').forEach(b => b.classList.toggle('on', (b.dataset.v === '1') === S.sale.paid));
   const val = money($('sVal').value), com = $('sCom').value.trim() === '' ? null : money($('sCom').value);
   const sp = !f || com == null ? '' : com > 100 ? '<span class="err">A comissão vai de 0 a 100%.</span>'
@@ -1023,7 +1025,7 @@ function renderSellDay(){
     const t = v.senha && S.tickets.find(x => x.id === v.senha);
     return `<div class="sale-row ${v.status === 'cancelada' ? 'off' : ''}">
       <div class="sr-n num">${pad(v.num)}<small>${hhmm(v.criadaEm)}</small></div>
-      <div class="sr-b"><b>${esc(v.cliente || 'Cliente sem nome')}</b><span>${esc(v.codigo)} · ${esc(v.flashNome || 'flash')} · ${esc(v.artista)}</span>
+      <div class="sr-b"><b>${esc(v.cliente || 'Cliente sem nome')}</b><span>${esc(v.codigo)} · ${esc(v.flashNome || 'flash')} · ${esc(v.artista)}</span>${v.cartaoNome ? `<span>Cartão: ${esc(v.cartaoNome)}</span>` : ''}
         <span class="tags">${v.status === 'cancelada' ? '<span class="tag">Cancelada</span>' : `<span class="tag">${PAY[v.pagamento] || 'Sem forma'}</span>${v.pago ? '' : '<span class="tag due">A receber</span>'}${t ? `<span class="tag">Senha ${pad(t.num)} · ${STATUS[t.status] || ''}</span>` : ''}${toBook(v) ? `<span class="tag">${v.tatuado ? 'Tatuado' : v.agendado ? 'Agendado' : 'Agendar'}</span>` : ''}`}</span></div>
       <div class="sr-v num">${brl(v.valor)}<small>estúdio ${pct(saleCom(v))}</small></div>
       ${v.status === 'cancelada' ? '' : `<div class="sr-x">${v.pago ? '' : `<button class="btn sm" data-act="markPaid" data-v="${v.id}">Marcar pago</button>`}<button class="btn ghost sm" data-act="cancelSale" data-v="${v.id}">Cancelar</button></div>`}
@@ -1102,7 +1104,7 @@ async function finishSale(){
     const flashTxt = (f.nome || 'flash') + ' (' + f.codigo + ')' + (obs ? ' · ' + obs : '');
     if (tref) await tref.set({num: senhaNum, artista: f.artista, cliente, obs: flashTxt, contato, insta, status: 'aguardando', ordem: now, criadaEm: now, criadaPor: S.me || '', venda: vref.id, flash: f.codigo});
     await vref.set({num, flashId: f.id, codigo: f.codigo, flashNome: f.nome || '', artista: f.artista, preco: f.preco || 0, valor, comissao, estudio: round2(valor * comissao / 100), repasse: round2(valor - valor * comissao / 100), pagamento: S.sale.pay, pago: S.sale.paid,
-      cliente, contato, insta, obs, criadaEm: now, vendedor: S.me || 'Gerente', senha: tref ? tref.id : '', senhaNum, status: 'ativa', local: later ? S.sale.local || '' : '', agendado: false});
+      cliente, contato, insta, obs, criadaEm: now, vendedor: S.me || 'Gerente', senha: tref ? tref.id : '', senhaNum, status: 'ativa', local: later ? S.sale.local || '' : '', agendado: false, cartaoNome: ['credito', 'debito'].includes(S.sale.pay) ? $('sCard').value.trim() : ''});
     receiptSheet({num, senhaNum, f, cliente, contato, valor, comissao, pay: S.sale.pay, paid: S.sale.paid, later});
     resetSale();
     if (later) return;
