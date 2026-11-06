@@ -604,10 +604,15 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const pad = n => String(n).padStart(3, '0');
 const two = n => String(n).padStart(2, '0');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+// O login fica em dois lugares (armazenamento do navegador e cookie de 60 dias): se um for limpo, a pessoa segue logada.
+const KEEP = ['eu', 'eu-pin'];
+const cookieGet = k => { try { const m = document.cookie.match(new RegExp('(?:^|; )rastro-' + k + '=([^;]*)')); return m ? decodeURIComponent(m[1]) : null; } catch(e){ return null; } };
+const cookieSet = (k, v) => { try { document.cookie = 'rastro-' + k + '=' + (v == null ? '' : encodeURIComponent(v)) + '; path=/; SameSite=Lax; max-age=' + (v == null ? 0 : 5184000) + (location.protocol === 'https:' ? '; Secure' : ''); } catch(e){} };
 const store = {
-  get(k){ try { return localStorage.getItem('rastro-' + k); } catch(e){ return null; } },
-  set(k, v){ try { v == null ? localStorage.removeItem('rastro-' + k) : localStorage.setItem('rastro-' + k, v); } catch(e){} }
+  get(k){ let v = null; try { v = localStorage.getItem('rastro-' + k); } catch(e){} return v == null && KEEP.includes(k) ? cookieGet(k) : v; },
+  set(k, v){ try { v == null ? localStorage.removeItem('rastro-' + k) : localStorage.setItem('rastro-' + k, v); } catch(e){} if (KEEP.includes(k)) cookieSet(k, v); }
 };
+try { navigator.storage && navigator.storage.persist && navigator.storage.persist().catch(() => {}); } catch(e){}
 const hhmm = t => { const d = new Date(t); return two(d.getHours()) + ':' + two(d.getMinutes()); };
 const mins = t => Math.max(0, Math.round((Date.now() - t) / 60000));
 const dur = t => { const m = mins(t); return m < 60 ? m + ' min' : Math.floor(m/60) + 'h' + two(m%60); };
@@ -1105,7 +1110,7 @@ async function finishSale(){
     if (tref) await tref.set({num: senhaNum, artista: f.artista, cliente, obs: flashTxt, contato, insta, status: 'aguardando', ordem: now, criadaEm: now, criadaPor: S.me || '', venda: vref.id, flash: f.codigo});
     await vref.set({num, flashId: f.id, codigo: f.codigo, flashNome: f.nome || '', artista: f.artista, preco: f.preco || 0, valor, comissao, estudio: round2(valor * comissao / 100), repasse: round2(valor - valor * comissao / 100), pagamento: S.sale.pay, pago: S.sale.paid,
       cliente, contato, insta, obs, criadaEm: now, vendedor: S.me || 'Gerente', senha: tref ? tref.id : '', senhaNum, status: 'ativa', local: later ? S.sale.local || '' : '', agendado: false, cartaoNome: ['credito', 'debito'].includes(S.sale.pay) ? $('sCard').value.trim() : ''});
-    receiptSheet({num, senhaNum, f, cliente, contato, valor, comissao, pay: S.sale.pay, paid: S.sale.paid, later});
+    receiptSheet({num, senhaNum, f, cliente, contato, valor, comissao, pay: S.sale.pay, paid: S.sale.paid, later, at: now});
     resetSale();
     if (later) return;
     await sleep(400);
@@ -1118,7 +1123,7 @@ function receiptSheet(r){
   const tel = phoneDigits(r.contato);
   const msg = r.later ? `Oi, ${r.cliente.split(' ')[0]}! Seu flash ${r.f.codigo} da Rastro, com ${r.f.artista}, está garantido. Em breve ${r.f.artista} te chama pra combinar o dia da tattoo.`
     : `Oi, ${r.cliente.split(' ')[0]}! Sua senha do Flash Day Rastro é a ${pad(r.senhaNum)}, com ${r.f.artista} (flash ${r.f.codigo}). A gente te chama quando a bancada estiver pronta.`;
-  sheet(`<h4>Venda ${pad(r.num)} registrada</h4>
+  sheet(`<h4>Venda ${pad(r.num)} registrada</h4><p class="hint num">Concluída às ${hhmm(r.at)} de ${new Date(r.at).toLocaleDateString('pt-BR')}</p>
     <div class="stub printed">
       <div class="stub-n">${r.later ? '<small>Agendar</small><b class="num">↗</b>' : `<small>Senha</small><b class="num">${pad(r.senhaNum)}</b>`}</div>
       <div class="stub-b"><div class="stub-a">${esc(r.f.artista)}</div><div class="stub-c">${esc(r.cliente)} · ${esc(r.f.nome || 'flash')} (${esc(r.f.codigo)})</div><div class="stub-c num">${brl(r.valor)} · ${PAY[r.pay]}${r.paid ? '' : ' · a receber'}</div><div class="stub-c num">Estúdio ${pct(r.comissao)} = ${brl(round2(r.valor * r.comissao / 100))} · artista ${brl(round2(r.valor - r.valor * r.comissao / 100))}</div></div>
@@ -2053,8 +2058,8 @@ async function boot(){
     S.cfg = d;
     S.comPadrao = typeof d.comissaoPadrao === 'number' ? d.comissaoPadrao : 30;
     S.coms = d.comissoes && typeof d.comissoes === 'object' ? d.comissoes : {};
-    if (S.me && !S.artists.includes(S.me) && !(d.gerentes || []).includes(S.me) && !(d.piercers || []).includes(S.me)){ S.me = null; store.set('eu', null); store.set('eu-pin', null); } // perfil que saiu da lista
-    if (S.me && !S.owner && store.get('eu-pin') !== (d.pinsArtistas || {})[S.me]){ S.me = null; store.set('eu', null); store.set('eu-pin', null); }
+    if (d.pinsArtistas && S.me && !S.artists.includes(S.me) && !(d.gerentes || []).includes(S.me) && !(d.piercers || []).includes(S.me)){ S.me = null; store.set('eu', null); store.set('eu-pin', null); } // perfil que saiu da lista
+    if (d.pinsArtistas && S.me && !S.owner && store.get('eu-pin') !== d.pinsArtistas[S.me]){ S.me = null; store.set('eu', null); store.set('eu-pin', null); }
     S.mgr = isMgr(S.me);
     mark(); afterSnap();
   }, onErr);
