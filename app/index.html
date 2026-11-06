@@ -459,8 +459,8 @@ body::before{background:var(--pink)}
     <div class="seg" role="tablist"><button data-act="sellView" data-v="nova" id="segNova">Nova venda</button><button data-act="sellView" data-v="dia" id="segDia">Vendas do dia</button></div>
     <div id="sellNew" class="sale">
       <div class="step">
-        <span class="step-k">1 · Código do flash</span>
-        <div class="code-row"><input id="sCode" data-in="saleCode" autocapitalize="characters" autocomplete="off" maxlength="8" placeholder="JZ001" aria-label="Código do flash"><button class="btn" data-act="pickFlash">Procurar</button></div>
+        <span class="step-k">1 · Código do flash <small>(letras e números)</small></span>
+        <input type="hidden" id="sCode"><div class="code-row"><input id="sL" data-in="saleL" autocapitalize="characters" autocomplete="off" maxlength="3" placeholder="JZ" aria-label="Letras do código" style="flex:0 0 104px;width:104px;text-transform:uppercase"><input id="sN" data-in="saleN" inputmode="numeric" autocomplete="off" maxlength="3" placeholder="001" aria-label="Números do código"><button class="btn" data-act="pickFlash">Procurar</button></div>
         <div id="sMatch"></div>
       </div>
       <div class="step">
@@ -970,9 +970,10 @@ function artistNow(name){
   return 'livre';
 }
 
+function syncCode(){ const L = $('sL').value, N = $('sN').value; $('sCode').value = L + (N ? N.padStart(3, '0') : ''); act.saleCode($('sCode')); }
 function resetSale(){
   S.sale = {flash: null, pay: '', paid: true, valTouched: false, comTouched: false};
-  ['sCode', 'sCli', 'sTel', 'sIg', 'sVal', 'sCom', 'sObs'].forEach(id => { $(id).value = ''; });
+  ['sCode', 'sL', 'sN', 'sCli', 'sTel', 'sIg', 'sVal', 'sCom', 'sObs'].forEach(id => { $(id).value = ''; });
   $('sErr').hidden = true;
   renderSell();
 }
@@ -984,7 +985,7 @@ function renderSell(){
   const code = $('sCode').value.trim();
   const f = S.sale.flash && S.flashes.find(x => x.id === S.sale.flash);
   let html;
-  if (!code) html = `<p class="hint">Digite o código da etiqueta do flash. Ou toque em <b>Procurar</b> pra achar pelo nome ou artista.</p>`;
+  if (!code || (!f && $('sN').value.length < 3)) html = `<p class="hint">Digite as letras e os números da etiqueta. Ou toque em <b>Procurar</b> pra achar pelo nome ou artista.</p>`;
   else if (!f) html = `<div class="match miss"><b>Nenhum flash com o código ${esc(code)}</b><span>Confira a etiqueta ou cadastre o flash na aba Flashes.</span></div>`;
   else {
     const q = waiting().filter(t => t.artista === f.artista).length;
@@ -1482,7 +1483,7 @@ function tourSteps(k){
   return [
     {tab: 'bancadas', sel: '#meBtn', t: 'Perfil de gerente', x: 'Neste perfil aparecem as abas de vendas, flashes e gerência. Pra trocar de perfil, toque aqui.'},
     {tab: 'flashes', sel: '.tools .btn.hot', t: 'Cadastre os flashes', x: 'Coloque o código da etiqueta, o artista e o preço de cada flash.'},
-    {tab: 'vender', sel: '#sCode', t: 'Comece a venda', x: 'Digite o código da etiqueta. O flash e o preço aparecem sozinhos.'},
+    {tab: 'vender', sel: '#sL', t: 'Comece a venda', x: 'Digite o código da etiqueta. O flash e o preço aparecem sozinhos.'},
     {tab: 'vender', sel: '#sGo', t: 'Finalize', x: 'Com cliente e pagamento preenchidos, toque aqui. A senha é gerada e dá pra mandar no WhatsApp.'},
     {tab: 'vender', sel: '#segDia', t: 'Caixa do dia', x: 'Total vendido, o que falta receber e a divisão por artista.'},
     {tab: 'bancadas', sel: '#benches .poster', t: 'Bancadas', x: 'Abriu uma bancada, a próxima senha é chamada sozinha. Aqui você também pausa uma bancada pra limpeza.'},
@@ -1709,7 +1710,13 @@ const act = {
     window.scrollTo({top: 0, behavior: 'instant'});
   },
   /* vendas */
-  sellView(el){ S.sellView = el.dataset.v; render(); if (S.sellView === 'nova') $('sCode').focus(); },
+  sellView(el){ S.sellView = el.dataset.v; render(); if (S.sellView === 'nova') $('sL').focus(); },
+  saleL(el){
+    el.value = el.value.toUpperCase().replace(/[^A-Z]/g, ''); syncCode();
+    const v = el.value, ps = [...new Set(S.flashes.map(f => (String(f.codigo).match(/^[A-Z]+/) || [''])[0]))];
+    if (v.length === 3 || (ps.includes(v) && !ps.some(p => p.length > v.length && p.startsWith(v)))) $('sN').focus();
+  },
+  saleN(el){ el.value = el.value.replace(/\D/g, ''); syncCode(); if (el.value.length === 3 && S.sale.flash) $('sCli').focus(); },
   saleCode(el){
     const f = flashByCode(el.value); S.sale.flash = f ? f.id : null;
     if (f && !S.sale.valTouched) $('sVal').value = f.preco ? String(f.preco).replace('.', ',') : '';
@@ -1753,11 +1760,11 @@ const act = {
   choose(el){
     const f = S.flashes.find(x => x.id === el.dataset.f); if (!f) return;
     closeSheet(); S.tab = 'vender'; S.sellView = 'nova'; store.set('aba', 'vender');
-    $('sCode').value = f.codigo; S.sale.valTouched = false; S.sale.comTouched = false; act.saleCode($('sCode')); render(); $('sCli').focus();
+    $('sCode').value = f.codigo; { const m = String(f.codigo).match(/^([A-Z]*)(.*)$/); $('sL').value = m[1]; $('sN').value = m[2]; } S.sale.valTouched = false; S.sale.comTouched = false; act.saleCode($('sCode')); render(); $('sCli').focus();
   },
-  clearSale(){ resetSale(); $('sCode').focus(); },
+  clearSale(){ resetSale(); $('sL').focus(); },
   finishSale,
-  newSale(){ closeSheet(); resetSale(); S.tab = 'vender'; S.sellView = 'nova'; render(); $('sCode').focus(); },
+  newSale(){ closeSheet(); resetSale(); S.tab = 'vender'; S.sellView = 'nova'; render(); $('sL').focus(); },
   markPaid(el){ return guard(async () => { await S.db.doc('vendas/' + el.dataset.v).update({pago: true, pagoEm: Date.now()}); toast('Marcado como pago.'); }); },
   cancelSale(el){
     const v = S.sales.find(x => x.id === el.dataset.v); if (!v) return;
@@ -1955,7 +1962,8 @@ document.addEventListener('input', e => {
   if (el && act[el.dataset.in]) act[el.dataset.in](el, e);
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && e.target.id === 'sCode'){ e.preventDefault(); if (S.sale.flash) $('sCli').focus(); }
+  if (e.key === 'Enter' && e.target.id === 'sL'){ e.preventDefault(); $('sN').focus(); }
+  if (e.key === 'Enter' && e.target.id === 'sN'){ e.preventDefault(); if (S.sale.flash) $('sCli').focus(); }
   if (e.key === 'Escape' && S.tour) tourEnd();
   if (e.key === 'Escape' && $('sheetRoot').innerHTML) closeSheet();
   if (e.key === 'Enter' && e.target.id === 'avTxt') act.sendNote();
