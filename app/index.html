@@ -933,7 +933,7 @@ function renderMine(){
     if (t) acts.push(`<button class="btn ghost sm" data-act="editJob" data-t="${t.id}">Editar</button>`);
     return `<div class="sold"><button class="sold-h" data-act="soldOpen" data-v="${v.id}" aria-expanded="${open}">
       ${flImg(f, false) || `<span class="sold-ph num">${esc(v.codigo || '–')}</span>`}
-      <span class="sold-t"><b>${esc(v.flashNome || 'Flash sem nome')}</b><span>${esc(v.cliente || 'Cliente sem nome')}</span></span>${pill}</button>
+      <span class="sold-t"><b>${esc(v.codigo)}</b><span>${esc(v.cliente || 'Cliente sem nome')}</span></span>${pill}</button>
       ${open ? `<div class="sold-b">${flImg(f)}<div class="job-t num">${when.join(' · ')}</div>
         ${v.valor ? `<div class="job-t num">${brl(v.valor)} · fica ${brl(saleArtist(v))}${v.pago ? '' : ' · a receber'}${v.local ? ' · ' + (v.local === 'casa' ? 'na Casa Flamma' : 'no estúdio do artista') : ''}</div>` : ''}
         ${src.contato ? `<div class="job-t">${esc(phoneShow(src.contato))}</div>` : ''}
@@ -958,7 +958,7 @@ function renderMine(){
     <div class="seg" role="tablist"><button class="${view === 'vendidas' ? 'on' : ''}" data-act="meuView" data-v="vendidas">Vendidas (${soldList.length})</button><button class="${view === 'flashes' ? 'on' : ''}" data-act="meuView" data-v="flashes">Flashes (${myFlashes.length})</button></div>
     ${view === 'vendidas'
       ? (soldList.length ? `<div class="sold-list">${soldList.map(soldRow).join('')}</div>` : '<div class="empty-box">Nenhuma arte vendida ainda. Quando o gerente vender um flash seu, ele aparece aqui.</div>')
-      : (myFlashes.length ? `<p class="hint">${live} de ${myFlashes.length} disponíveis${noPrice ? ' · ' + noPrice + ' sem preço' : ''}</p><div class="fls">${myFlashes.map(f => `<div class="fl ${soldOut(f) || f.ativo === false ? 'sold' : ''}"><div class="fl-h"><span class="code num">${esc(f.codigo)}</span><span class="pill ${soldOut(f) ? 's-concluido' : 's-aguardando'}">${f.ativo === false ? 'Fora de venda' : soldOut(f) ? 'Vendido' : 'Disponível'}</span></div>${flImg(f)}<div class="fl-n">${esc(f.nome || 'Flash sem nome')}</div><div class="job-t num">${f.preco ? brl(f.preco) : 'Sem preço'}</div>${who === S.me && !soldOut(f) ? `<div class="job-x"><button class="btn sm ${f.preco ? 'ghost' : 'hot'}" data-act="myPrice" data-f="${f.id}">${f.preco ? 'Mudar preço' : 'Definir preço'}</button></div>` : ''}</div>`).join('')}</div>` : '<div class="empty-box">Nenhum flash cadastrado ainda.</div>')}
+      : (myFlashes.length ? `<p class="hint">${live} de ${myFlashes.length} disponíveis${noPrice ? ' · ' + noPrice + ' sem preço' : ''}</p><div class="fls">${myFlashes.map(f => `<div class="fl ${soldOut(f) || f.ativo === false ? 'sold' : ''}"><div class="fl-h"><span class="code num">${esc(f.codigo)}</span><span class="pill ${soldOut(f) ? 's-concluido' : 's-aguardando'}">${f.ativo === false ? 'Fora de venda' : soldOut(f) ? 'Vendido' : 'Disponível'}</span></div>${flImg(f)}<div class="fl-n">${esc(f.artista)}</div><div class="job-t num">${f.preco ? brl(f.preco) : 'Sem preço'}</div>${who === S.me && !soldOut(f) ? `<div class="job-x"><button class="btn sm ${f.preco ? 'ghost' : 'hot'}" data-act="myPrice" data-f="${f.id}">${f.preco ? 'Mudar preço' : 'Definir preço'}</button></div>` : ''}</div>`).join('')}</div>` : '<div class="empty-box">Nenhum flash cadastrado ainda.</div>')}
     ${canc.length && view === 'vendidas' ? `<details class="group"><summary>Cancelados · ${canc.length}</summary><div class="jobs">${canc.map(jobCard).join('')}</div></details>` : ''}
     ${who === S.me && !S.owner ? '<div class="me-foot"><button class="btn ghost sm" data-act="myPin">Trocar meu PIN</button></div>' : ''}`;
 }
@@ -1024,7 +1024,7 @@ function renderSell(){
     html = `<div class="match ${out || off ? 'bad' : ''}">
       <div class="match-h"><span class="code num">${esc(f.codigo)}</span><span class="pill ${out || off ? 's-cancelado' : 's-aguardando'}">${off ? 'Fora de venda' : out ? 'Já vendido' : f.repete ? 'Disponível · repete' : 'Disponível'}</span></div>
       ${flImg(f)}<div class="match-a">${esc(f.artista)}</div>
-      <div class="match-n">${esc(f.nome || 'Flash sem nome')}${f.tamanho ? ' · ' + esc(f.tamanho) : ''}</div>
+      <div class="match-n">${esc(f.artista)}${f.tamanho ? ' · ' + esc(f.tamanho) : ''}</div>
       <div class="match-p num">${f.preco ? brl(f.preco) : 'Sem preço cadastrado'}</div>
       ${later ? place : `<div class="job-t">${esc(f.artista)} está ${esc(artistNow(f.artista))} · ${q ? q + (q === 1 ? ' senha' : ' senhas') + ' na fila' : 'ninguém na fila'}</div>`}
       ${out ? `<div class="job-t">Vendido pra ${esc(salesOf(f)[0].cliente || 'cliente')} às ${hhmm(salesOf(f)[0].criadaEm)}.</div>` : ''}
@@ -1054,7 +1054,7 @@ function renderSellDay(){
     const t = v.senha && S.tickets.find(x => x.id === v.senha);
     return `<div class="sale-row ${v.status === 'cancelada' ? 'off' : ''}">
       <div class="sr-n num">${pad(v.num)}<small>${hhmm(v.criadaEm)}</small></div>
-      <div class="sr-b"><b>${esc(v.cliente || 'Cliente sem nome')}</b><span>${esc(v.codigo)} · ${esc(v.flashNome || 'flash')} · ${esc(v.artista)}</span>${v.cartaoNome ? `<span>Cartão: ${esc(v.cartaoNome)}</span>` : ''}
+      <div class="sr-b"><b>${esc(v.cliente || 'Cliente sem nome')}</b><span>${esc(v.codigo)} · ${esc(v.artista)}</span>${v.cartaoNome ? `<span>Cartão: ${esc(v.cartaoNome)}</span>` : ''}
         <span class="tags">${v.status === 'cancelada' ? '<span class="tag">Cancelada</span>' : `<span class="tag">${PAY[v.pagamento] || 'Sem forma'}</span>${v.pago ? '' : '<span class="tag due">A receber</span>'}${t ? `<span class="tag">Senha ${pad(t.num)} · ${STATUS[t.status] || ''}</span>` : ''}${toBook(v) ? `<span class="tag">${v.tatuado ? 'Tatuado' : v.agendado ? 'Agendado' : 'Agendar'}</span>` : ''}`}</span></div>
       <div class="sr-v num">${brl(v.valor)}<small>estúdio ${pct(saleCom(v))}</small></div>
       ${v.status === 'cancelada' ? '' : `<div class="sr-x">${v.pago ? '' : `<button class="btn sm" data-act="markPaid" data-v="${v.id}">Marcar pago</button>`}<button class="btn ghost sm" data-act="cancelSale" data-v="${v.id}">Cancelar</button></div>`}
@@ -1096,7 +1096,7 @@ function pickList(q){
   const k = String(q || '').trim().toLowerCase();
   const list = S.flashes.filter(f => f.ativo !== false && !soldOut(f) && (!k || [f.codigo, f.nome, f.artista].some(x => String(x || '').toLowerCase().includes(k))));
   if (!list.length) return '<p class="hint">Nenhum flash disponível com essa busca.</p>';
-  return list.slice(0, 60).map(f => `<button class="pick" data-act="choose" data-f="${f.id}">${flImg(f, false) || `<span class="code num">${esc(f.codigo)}</span>`}<span class="pk-b"><b>${f.foto ? esc(f.codigo) + ' · ' : ''}${esc(f.nome || 'Flash sem nome')}</b><span>${esc(f.artista)}</span></span><span class="num">${f.preco ? brl(f.preco) : ''}</span></button>`).join('');
+  return list.slice(0, 60).map(f => `<button class="pick" data-act="choose" data-f="${f.id}">${flImg(f, false) || `<span class="code num">${esc(f.codigo)}</span>`}<span class="pk-b"><b>${esc(f.codigo)}</b><span>${esc(f.artista)}</span></span><span class="num">${f.preco ? brl(f.preco) : ''}</span></button>`).join('');
 }
 function pickSheet(){
   sheet(`<h4>Procurar flash</h4>
@@ -1130,7 +1130,7 @@ async function finishSale(){
     const [num, senhaNum] = [await nextNumber('vendas'), later ? 0 : await nextNumber('senhas')];
     const now = Date.now();
     const vref = S.db.collection('vendas').doc(), tref = later ? null : S.db.collection('senhas').doc();
-    const flashTxt = (f.nome || 'flash') + ' (' + f.codigo + ')' + (obs ? ' · ' + obs : '');
+    const flashTxt = 'flash ' + f.codigo + (obs ? ' · ' + obs : '');
     if (tref) await tref.set({num: senhaNum, artista: f.artista, cliente, obs: flashTxt, contato, insta, status: 'aguardando', ordem: now, criadaEm: now, criadaPor: S.me || '', venda: vref.id, flash: f.codigo});
     await vref.set({num, flashId: f.id, codigo: f.codigo, flashNome: f.nome || '', artista: f.artista, preco: f.preco || 0, valor, comissao, estudio: round2(valor * comissao / 100), repasse: round2(valor - valor * comissao / 100), pagamento: S.sale.pay, pago: S.sale.paid,
       cliente, contato, insta, obs, criadaEm: now, vendedor: S.me || 'Gerente', senha: tref ? tref.id : '', senhaNum, status: 'ativa', local: later ? S.sale.local || '' : '', agendado: false, cartaoNome: ['credito', 'debito'].includes(S.sale.pay) ? $('sCard').value.trim() : ''});
@@ -1150,7 +1150,7 @@ function receiptSheet(r){
   sheet(`<h4>Venda ${pad(r.num)} registrada</h4><p class="hint num">Concluída às ${hhmm(r.at)} de ${new Date(r.at).toLocaleDateString('pt-BR')}</p>
     <div class="stub printed">
       <div class="stub-n">${r.later ? '<small>Agendar</small><b class="num">↗</b>' : `<small>Senha</small><b class="num">${pad(r.senhaNum)}</b>`}</div>
-      <div class="stub-b"><div class="stub-a">${esc(r.f.artista)}</div><div class="stub-c">${esc(r.cliente)} · ${esc(r.f.nome || 'flash')} (${esc(r.f.codigo)})</div><div class="stub-c num">${brl(r.valor)} · ${PAY[r.pay]}${r.paid ? '' : ' · a receber'}</div><div class="stub-c num">Estúdio ${pct(r.comissao)} = ${brl(round2(r.valor * r.comissao / 100))} · artista ${brl(round2(r.valor - r.valor * r.comissao / 100))}</div></div>
+      <div class="stub-b"><div class="stub-a">${esc(r.f.artista)}</div><div class="stub-c">${esc(r.cliente)} · flash ${esc(r.f.codigo)}</div><div class="stub-c num">${brl(r.valor)} · ${PAY[r.pay]}${r.paid ? '' : ' · a receber'}</div><div class="stub-c num">Estúdio ${pct(r.comissao)} = ${brl(round2(r.valor * r.comissao / 100))} · artista ${brl(round2(r.valor - r.valor * r.comissao / 100))}</div></div>
       <div></div>
     </div>
     <p class="hint">${r.later ? esc(r.f.artista) + ' não tatua no dia. A venda foi pro Meu painel do artista, pra agendar com o cliente.' : (ahead ? ahead + (ahead === 1 ? ' senha na frente.' : ' senhas na frente.') : 'É a primeira da fila.') + ' ' + esc(r.f.artista) + ' recebe o aviso no celular quando a bancada estiver pronta.'}</p>
@@ -1197,7 +1197,7 @@ function renderFlashes(){
     const n = salesOf(f).length, out = soldOut(f), off = f.ativo === false;
     return `<div class="fl ${out || off ? 'sold' : ''}">
       <div class="fl-h"><span class="code num">${esc(f.codigo)}</span><span class="pill ${off ? 's-cancelado' : out ? 's-concluido' : 's-aguardando'}">${off ? 'Fora de venda' : out ? 'Vendido' : n ? n + ' vendido' + (n === 1 ? '' : 's') : 'Disponível'}</span></div>
-      ${flImg(f)}<div class="fl-n">${esc(f.nome || 'Flash sem nome')}</div>
+      ${flImg(f)}<div class="fl-n">${esc(f.artista)}</div>
       <div class="job-t num">${f.preco ? brl(f.preco) : 'Sem preço'}${f.tamanho ? ' · ' + esc(f.tamanho) : ''}${f.repete ? ' · repete' : ''}</div>
       <div class="job-x">${!out && !off ? `<button class="btn hot sm" data-act="sellThis" data-f="${f.id}">Vender</button>` : ''}<button class="btn ghost sm" data-act="editFlash" data-f="${f.id}">Editar</button></div>
     </div>`;
@@ -1216,7 +1216,7 @@ function flashSheet(id, artist){
       <div class="field"><label class="lbl" for="flC">Código da etiqueta</label><input id="flC" autocapitalize="characters" autocomplete="off" maxlength="8" value="${esc(f ? f.codigo : nextCode())}" ${sold ? 'disabled' : ''}></div>
       <div class="field"><label class="lbl" for="flP">Preço (R$)</label><input id="flP" inputmode="decimal" autocomplete="off" maxlength="10" value="${f && f.preco ? String(f.preco).replace('.', ',') : ''}" placeholder="200"></div>
     </div>
-    <div class="field"><label class="lbl" for="flN">Nome ou descrição</label><input id="flN" autocomplete="off" maxlength="60" value="${esc(f ? f.nome : '')}" placeholder="Ex.: corvo com lua"></div>
+    <div class="field"><label class="lbl" for="flN">Descrição <span style="text-transform:none;letter-spacing:0">(opcional, não aparece)</span></label><input id="flN" autocomplete="off" maxlength="60" value="${esc(f ? f.nome : '')}" placeholder="Ex.: corvo com lua"></div>
     <div class="field"><span class="lbl">Foto do flash <span style="text-transform:none;letter-spacing:0">(opcional)</span></span><div class="fl-pic" id="flPic">${flPic()}</div></div>
     <div class="field"><label class="lbl" for="flT">Tamanho <span style="text-transform:none;letter-spacing:0">(opcional)</span></label><input id="flT" autocomplete="off" maxlength="30" value="${esc(f ? f.tamanho : '')}" placeholder="Ex.: 10 cm"></div>
     <label class="check"><input type="checkbox" id="flR" ${f && f.repete ? 'checked' : ''}> Pode ser vendido mais de uma vez</label>
@@ -1760,7 +1760,7 @@ const act = {
   markBooked(el){ const on = el.dataset.on === '1'; return guard(async () => { await S.db.doc('vendas/' + el.dataset.v).update({agendado: on}); toast(on ? 'Marcado como agendado.' : 'Voltou pra agendar.'); }); },
   myPrice(el){
     const f = S.flashes.find(x => x.id === el.dataset.f); if (!f || f.artista !== S.me) return;
-    sheet(`<h4>Preço do flash ${esc(f.codigo)}</h4><p class="hint">${esc(f.nome || 'Flash sem nome')}. O novo preço vale pras próximas vendas.</p>
+    sheet(`<h4>Preço do flash ${esc(f.codigo)}</h4><p class="hint">${esc(f.artista)}. O novo preço vale pras próximas vendas.</p>
       <div class="field"><label class="lbl" for="mpV">Preço (R$)</label><input id="mpV" inputmode="decimal" autocomplete="off" maxlength="10" value="${f.preco ? String(f.preco).replace('.', ',') : ''}" placeholder="200"></div>
       <p class="err" id="mpE" hidden></p>
       <div class="row"><button class="btn hot grow" data-act="myPriceSave" data-f="${f.id}">Salvar</button><button class="btn ghost" data-act="close">Cancelar</button></div>`);
@@ -1800,7 +1800,7 @@ const act = {
   markPaid(el){ return guard(async () => { await S.db.doc('vendas/' + el.dataset.v).update({pago: true, pagoEm: Date.now()}); toast('Marcado como pago.'); }); },
   cancelSale(el){
     const v = S.sales.find(x => x.id === el.dataset.v); if (!v) return;
-    sheet(`<h4>Cancelar a venda ${pad(v.num)}?</h4><p class="hint">${esc(v.cliente)} · ${esc(v.flashNome)} (${esc(v.codigo)}) com ${esc(v.artista)} · ${brl(v.valor)}. O flash volta a ficar disponível${v.senhaNum ? ' e a senha ' + pad(v.senhaNum) + ' sai da fila, se ainda não foi chamada' : ''}.</p>
+    sheet(`<h4>Cancelar a venda ${pad(v.num)}?</h4><p class="hint">${esc(v.cliente)} · flash ${esc(v.codigo)} com ${esc(v.artista)} · ${brl(v.valor)}. O flash volta a ficar disponível${v.senhaNum ? ' e a senha ' + pad(v.senhaNum) + ' sai da fila, se ainda não foi chamada' : ''}.</p>
       <div class="row"><button class="btn hot grow" data-act="confirmCancelSale" data-v="${v.id}">Sim, cancelar venda</button><button class="btn ghost" data-act="close">Voltar</button></div>`);
   },
   confirmCancelSale(el){ return guard(async () => {
@@ -2072,8 +2072,8 @@ async function boot(){
   db.collection('bancadas').orderBy('num').onSnapshot(s => { S.benches = s.docs.map(d => Object.assign({id: d.id}, d.data())); mark(); afterSnap(); }, onErr);
   db.collection('senhas').orderBy('ordem').onSnapshot(s => { S.tickets = s.docs.map(d => Object.assign({id: d.id}, d.data())); mark(); afterSnap(); }, onErr);
   db.collection('avisos').orderBy('criadoEm', 'desc').limit(40).onSnapshot(s => { S.notes = s.docs.map(d => Object.assign({id: d.id}, d.data())); mark(); afterSnap(); }, onErr);
-  db.collection('flashes').orderBy('codigo').onSnapshot(s => { S.flashes = s.docs.map(d => Object.assign({id: d.id}, d.data())); mark(); afterSnap(); }, onErr);
-  db.collection('vendas').orderBy('criadaEm', 'desc').onSnapshot(s => { S.sales = s.docs.map(d => Object.assign({id: d.id}, d.data())); mark(); afterSnap(); }, onErr);
+  db.collection('flashes').orderBy('codigo').onSnapshot(s => { S.flashes = s.docs.map(d => Object.assign({id: d.id}, d.data(), {nome: ''})); mark(); afterSnap(); }, onErr);
+  db.collection('vendas').orderBy('criadaEm', 'desc').onSnapshot(s => { S.sales = s.docs.map(d => Object.assign({id: d.id}, d.data(), {flashNome: ''})); mark(); afterSnap(); }, onErr);
   db.collection('joias').orderBy('nome').onSnapshot(s => { S.joias = s.docs.map(d => Object.assign({id: d.id}, d.data())); mark(); afterSnap(); }, onErr);
   db.collection('piercings').orderBy('criadoEm', 'desc').onSnapshot(s => { S.piercings = s.docs.map(d => Object.assign({id: d.id}, d.data())); mark(); afterSnap(); }, onErr);
   db.doc('config/geral').onSnapshot(s => {
